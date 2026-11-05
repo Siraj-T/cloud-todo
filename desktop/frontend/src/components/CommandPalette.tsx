@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Search, Plus, Moon, Sun, CheckCircle2, Folder, Laptop } from 'lucide-react';
+import { Search, Plus, Moon, Sun, CheckCircle2, Folder, Laptop, Feather } from 'lucide-react';
 import { Task, Project } from '../types';
 
 interface CommandPaletteProps {
@@ -51,105 +51,118 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   const filteredProjects = projects.filter(p => p.name.toLowerCase().includes(query.toLowerCase()));
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-28 bg-black/70 backdrop-blur-md animate-in fade-in duration-150">
-      <div className="w-full max-w-lg bg-[#111215]/95 border border-white/10 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.85),inset_0_1px_0_0_rgba(255,255,255,0.12)] rounded-2xl overflow-hidden flex flex-col text-zinc-200">
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-24 bg-ink/75 dark:bg-black/80 backdrop-blur-md animate-in fade-in duration-150 font-sans">
+      <div className="w-full max-w-xl bg-paper-2 dark:bg-ink-2 border border-line dark:border-line-ink shadow-2xl rounded-2xl overflow-hidden flex flex-col text-ink dark:text-paper transition-all">
         {/* Search Bar */}
-        <div className="flex items-center px-4 py-3.5 border-b border-white/[0.08] bg-white/[0.02]">
-          <Search className="w-4 h-4 text-indigo-400 mr-3 shrink-0" />
+        <div className="flex items-center px-5 py-4 border-b border-line dark:border-line-ink bg-paper-2 dark:bg-ink-2">
+          <Search className="w-4 h-4 text-ember mr-3 shrink-0" />
           <input
             autoFocus
             type="text"
-            placeholder="Search commands, tasks, or projects..."
+            placeholder="Type a command, task title, or project name..."
             value={query}
             onChange={e => setQuery(e.target.value)}
-            className="w-full bg-transparent text-sm placeholder:text-zinc-500 outline-none text-white font-medium"
+            className="w-full bg-transparent text-sm placeholder:text-sepia outline-none text-ink dark:text-paper font-medium"
           />
-          <kbd className="px-1.5 py-0.5 text-[10px] font-mono text-zinc-400 bg-white/[0.06] rounded border border-white/[0.08]">
+          <kbd className="px-2 py-0.5 text-[10px] font-mono text-sepia bg-paper-3/70 dark:bg-ink rounded-md border border-line dark:border-line-ink">
             ESC
           </kbd>
         </div>
 
         {/* Action List */}
-        <div className="max-h-84 overflow-y-auto p-2 space-y-1">
+        <div className="max-h-96 overflow-y-auto p-3 space-y-1.5">
           {/* Quick Actions */}
-          <div className="px-2.5 py-1 text-[10px] font-mono font-semibold text-zinc-500 uppercase tracking-wider">
+          <div className="px-3 py-1 text-[10px] font-mono font-semibold text-sepia uppercase tracking-wider">
             Quick Actions
           </div>
           <button
             onClick={() => { onNewTask(); onClose(); }}
-            className="w-full flex items-center px-2.5 py-2 text-xs rounded-lg hover:bg-white/[0.06] text-left group transition-all text-zinc-300 hover:text-white"
+            className="w-full flex items-center px-3 py-2 text-xs rounded-lg hover:bg-paper-3/60 dark:hover:bg-ink/60 text-left group transition-all text-ink dark:text-paper"
           >
-            <Plus className="w-3.5 h-3.5 mr-2.5 text-zinc-500 group-hover:text-indigo-400" />
+            <Plus className="w-4 h-4 mr-3 text-sepia group-hover:text-ember" />
             <span>Create new task</span>
           </button>
           <button
             onClick={() => { onNewProject(); onClose(); }}
-            className="w-full flex items-center px-2.5 py-2 text-xs rounded-lg hover:bg-white/[0.06] text-left group transition-all text-zinc-300 hover:text-white"
+            className="w-full flex items-center px-3 py-2 text-xs rounded-lg hover:bg-paper-3/60 dark:hover:bg-ink/60 text-left group transition-all text-ink dark:text-paper"
           >
-            <Folder className="w-3.5 h-3.5 mr-2.5 text-zinc-500 group-hover:text-indigo-400" />
+            <Folder className="w-4 h-4 mr-3 text-sepia group-hover:text-ember" />
             <span>Create new project</span>
           </button>
           <button
             onClick={() => { onOpenDevices(); onClose(); }}
-            className="w-full flex items-center px-2.5 py-2 text-xs rounded-lg hover:bg-white/[0.06] text-left group transition-all text-zinc-300 hover:text-white"
+            className="w-full flex items-center px-3 py-2 text-xs rounded-lg hover:bg-paper-3/60 dark:hover:bg-ink/60 text-left group transition-all text-ink dark:text-paper"
           >
-            <Laptop className="w-3.5 h-3.5 mr-2.5 text-zinc-500 group-hover:text-indigo-400" />
+            <Laptop className="w-4 h-4 mr-3 text-sepia group-hover:text-ember" />
             <span>Manage signed-in devices</span>
           </button>
           <button
             onClick={() => { onToggleTheme(); onClose(); }}
-            className="w-full flex items-center px-2.5 py-2 text-xs rounded-lg hover:bg-white/[0.06] text-left group transition-all text-zinc-300 hover:text-white"
+            className="w-full flex items-center px-3 py-2 text-xs rounded-lg hover:bg-paper-3/60 dark:hover:bg-ink/60 text-left group transition-all text-ink dark:text-paper"
           >
-            {isDark ? <Sun className="w-3.5 h-3.5 mr-2.5 text-amber-400" /> : <Moon className="w-3.5 h-3.5 mr-2.5 text-indigo-400" />}
-            <span>Toggle {isDark ? 'Light' : 'Dark'} theme</span>
+            {isDark ? (
+              <Sun className="w-4 h-4 mr-3 text-sepia group-hover:text-ember" />
+            ) : (
+              <Moon className="w-4 h-4 mr-3 text-sepia group-hover:text-ember" />
+            )}
+            <span>Switch to {isDark ? 'Incarn Parchment (Light)' : 'Incarn Darkroom (Dark)'}</span>
           </button>
 
-          {/* Projects */}
+          {/* Jump to Project */}
           {filteredProjects.length > 0 && (
             <>
-              <div className="px-2.5 pt-3 pb-1 text-[10px] font-mono font-semibold text-zinc-500 uppercase tracking-wider">
+              <div className="px-3 pt-3 pb-1 text-[10px] font-mono font-semibold text-sepia uppercase tracking-wider">
                 Projects
               </div>
               {filteredProjects.map(p => (
                 <button
                   key={p.id}
                   onClick={() => { onSelectProject(p.id); onClose(); }}
-                  className="w-full flex items-center px-2.5 py-2 text-xs rounded-lg hover:bg-white/[0.06] text-left group transition-all text-zinc-300 hover:text-white"
+                  className="w-full flex items-center px-3 py-2 text-xs rounded-lg hover:bg-paper-3/60 dark:hover:bg-ink/60 text-left group transition-all text-ink dark:text-paper"
                 >
-                  <Folder className="w-3.5 h-3.5 mr-2.5 text-zinc-500 group-hover:text-indigo-400" />
-                  <span>{p.name}</span>
+                  <Folder className="w-4 h-4 mr-3 text-sepia group-hover:text-ember" />
+                  <span className="truncate">{p.name}</span>
                 </button>
               ))}
             </>
           )}
 
-          {/* Tasks */}
+          {/* Search Results */}
           {filteredTasks.length > 0 && (
             <>
-              <div className="px-2.5 pt-3 pb-1 text-[10px] font-mono font-semibold text-zinc-500 uppercase tracking-wider">
-                Tasks
+              <div className="px-3 pt-3 pb-1 text-[10px] font-mono font-semibold text-sepia uppercase tracking-wider">
+                Matching Tasks
               </div>
               {filteredTasks.map(t => (
                 <button
                   key={t.id}
                   onClick={() => { onSelectTask(t); onClose(); }}
-                  className="w-full flex items-center justify-between px-2.5 py-2 text-xs rounded-lg hover:bg-white/[0.06] text-left group transition-all text-zinc-300 hover:text-white"
+                  className="w-full flex items-center justify-between px-3 py-2 text-xs rounded-lg hover:bg-paper-3/60 dark:hover:bg-ink/60 text-left group transition-all text-ink dark:text-paper"
                 >
-                  <div className="flex items-center min-w-0">
-                    <CheckCircle2 className={`w-3.5 h-3.5 mr-2.5 shrink-0 ${t.completed ? 'text-indigo-400' : 'text-zinc-600'}`} />
-                    <span className="truncate">{t.title}</span>
+                  <div className="flex items-center gap-3 truncate">
+                    <CheckCircle2 className={`w-4 h-4 shrink-0 ${t.completed ? 'text-sage' : 'text-sepia group-hover:text-ember'}`} />
+                    <span className={`truncate ${t.completed ? 'line-through text-sepia' : ''}`}>{t.title}</span>
                   </div>
-                  {t.dueDate && <span className="text-[10px] font-mono text-zinc-500 shrink-0 ml-2">{t.dueDate}</span>}
+                  {t.dueDate && (
+                    <span className="text-[10px] font-mono text-sepia ml-2 shrink-0">{t.dueDate}</span>
+                  )}
                 </button>
               ))}
             </>
           )}
         </div>
 
-        {/* Footer Hint */}
-        <div className="px-4 py-2 border-t border-white/[0.06] bg-white/[0.01] flex items-center justify-between text-[10px] text-zinc-500 font-mono">
-          <span>Navigate with arrows</span>
-          <span>Press Enter to select</span>
+        {/* Footer */}
+        <div className="px-5 py-2.5 bg-paper/60 dark:bg-ink-3 border-t border-line dark:border-line-ink flex items-center justify-between text-[11px] text-sepia font-mono">
+          <div className="flex items-center gap-3">
+            <span>↑↓ Navigate</span>
+            <span>↵ Select</span>
+            <span>ESC Dismiss</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-ember">
+            <Feather className="w-3.5 h-3.5" />
+            <span>Incarn Theme</span>
+          </div>
         </div>
       </div>
     </div>

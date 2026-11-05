@@ -4,90 +4,107 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 4%;
-    --card: 0 0% 98%;
-    --card-foreground: 240 10% 4%;
-    --border: 240 6% 90%;
-    --primary: 243 75% 59%;
-    --primary-foreground: 0 0% 100%;
-    --radius: 0.75rem;
+    /* Incarn Parchment Light Theme */
+    --background: 40 43% 91%;        /* #f3ecdf warm aged paper */
+    --foreground: 24 24% 11%;        /* #241c15 roasted ink */
+    --card: 43 65% 95%;              /* #fbf6ec elevated cream paper */
+    --card-foreground: 24 24% 11%;
+    --popover: 43 65% 95%;
+    --popover-foreground: 24 24% 11%;
+    --primary: 24 55% 50%;           /* #c4703a burnt terracotta / ember */
+    --primary-foreground: 40 43% 91%;
+    --secondary: 38 35% 88%;         /* #ede3d2 neutral paper */
+    --secondary-foreground: 24 24% 11%;
+    --muted: 38 35% 88%;
+    --muted-foreground: 28 22% 27%;  /* #544636 soft ink */
+    --accent: 38 35% 88%;
+    --accent-foreground: 24 24% 11%;
+    --destructive: 0 65% 51%;
+    --destructive-foreground: 40 43% 91%;
+    --border: rgba(36, 28, 21, 0.12);
+    --input: rgba(36, 28, 21, 0.08);
+    --ring: #c4703a;
+    --radius: 0.625rem;
   }
 
   .dark {
-    --background: 230 14% 5%;       /* #0b0c0e */
-    --foreground: 240 5% 96%;        /* #f4f4f5 */
-    --card: 230 12% 8%;              /* #121316 */
-    --card-foreground: 240 5% 96%;
-    --popover: 230 11% 10%;          /* #18191e */
-    --popover-foreground: 240 5% 96%;
-    --primary: 243 75% 59%;          /* #5e6ad2 Linear Indigo */
-    --primary-foreground: 0 0% 100%;
-    --secondary: 230 10% 12%;        /* #1c1e24 */
-    --secondary-foreground: 240 5% 90%;
-    --muted: 230 10% 12%;
-    --muted-foreground: 240 5% 55%;  /* #888991 */
-    --accent: 230 10% 14%;
-    --accent-foreground: 240 5% 96%;
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 100% / 0.07;      /* Hair-thin 7% white border */
-    --input: 0 0% 100% / 0.08;
-    --ring: 243 75% 59%;
+    /* Incarn Darkroom Espresso Theme */
+    --background: 24 26% 8%;         /* #191410 deep darkroom espresso */
+    --foreground: 40 43% 91%;        /* #f3ecdf warm paper text */
+    --card: 24 22% 12%;              /* #241d17 warm roasted surface */
+    --card-foreground: 40 43% 91%;
+    --popover: 24 22% 14%;           /* #2a221b elevated dark card */
+    --popover-foreground: 40 43% 91%;
+    --primary: 24 55% 50%;           /* #c4703a warm ember */
+    --primary-foreground: 40 43% 91%;
+    --secondary: 24 18% 18%;         /* #362c23 dark sepia */
+    --secondary-foreground: 40 43% 91%;
+    --muted: 24 18% 18%;
+    --muted-foreground: 36 24% 61%;  /* #b4a184 soft sepia text */
+    --accent: 24 18% 20%;
+    --accent-foreground: 40 43% 91%;
+    --destructive: 0 65% 51%;
+    --destructive-foreground: 40 43% 91%;
+    --border: rgba(243, 236, 223, 0.12);
+    --input: rgba(243, 236, 223, 0.08);
+    --ring: #c4703a;
   }
 }
 
 body {
-  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   user-select: none;
-  background-color: #0b0c0e;
-  color: #f4f4f5;
-  letter-spacing: -0.011em;
+  background-color: var(--background);
+  color: var(--foreground);
+  letter-spacing: -0.005em;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
 }
 
 code, kbd, pre, .font-mono {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Roboto Mono', monospace;
 }
 
-/* Raycast Glass & Depth Utilities */
-.raycast-panel {
-  background: rgba(18, 19, 22, 0.85);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.07),
-              0 24px 48px -12px rgba(0, 0, 0, 0.8),
-              inset 0 1px 0 0 rgba(255, 255, 255, 0.12);
+/* Incarn Tactile Surfaces */
+.incarn-card {
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 3px rgba(36, 28, 21, 0.05);
 }
 
-.raycast-subtle {
-  background: rgba(255, 255, 255, 0.03);
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.05);
+.incarn-modal {
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  box-shadow: 0 24px 60px -15px rgba(0, 0, 0, 0.35), 0 0 0 1px var(--border);
 }
 
-.raycast-subtle:hover {
-  background: rgba(255, 255, 255, 0.05);
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.09);
-}
-
-.raycast-focus {
+.incarn-input {
+  background-color: var(--input);
+  border: 1px solid var(--border);
   transition: all 0.15s ease-out;
 }
-.raycast-focus:focus-within {
-  box-shadow: 0 0 0 1px #5e6ad2, 0 0 16px -2px rgba(94, 106, 210, 0.4);
+.incarn-input:focus {
+  border-color: #c4703a;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(196, 112, 58, 0.25);
 }
 
-/* Custom modern subtle scrollbar */
+/* Diode pulse effect */
+.diode-pulse-green {
+  animation: diode-pulse 2s ease-in-out infinite;
+}
+
+/* Custom subtle warm scrollbar */
 ::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(122, 98, 72, 0.2);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.22);
+  background: rgba(122, 98, 72, 0.38);
 }

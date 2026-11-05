@@ -8,16 +8,16 @@ import { DevicesModal } from './components/DevicesModal';
 import { ConflictModal } from './components/ConflictModal';
 import { Task, Project, SyncState, DeviceSession } from './types';
 
-// Mock seed tasks for demonstration & initial offline work
+// Initial seed tasks matching requirements
 const initialTasks: Task[] = [
   {
     id: 't-1',
     ownerUid: 'user-1',
     projectId: 'p-1',
-    title: 'Build local storage in SQLite',
-    description: 'Persist all tasks, projects, and outbox mutations atomically.',
+    title: 'Design SQLite atomic persistence and outbox',
+    description: 'Ensure transactions commit task changes and sync mutation records atomically without partial writes.',
     dueDate: '2026-11-10',
-    tags: ['go', 'sqlite'],
+    tags: ['go', 'sqlite', 'persistence'],
     completed: false,
     version: 1,
     createdAt: new Date().toISOString(),
@@ -28,10 +28,10 @@ const initialTasks: Task[] = [
     ownerUid: 'user-1',
     projectId: 'p-1',
     parentId: 't-1',
-    title: 'Write migration rollback tests',
-    description: '',
+    title: 'Implement 5,000-task benchmark test',
+    description: 'Verify 95th percentile local write latency remains under 100 milliseconds.',
     dueDate: null,
-    tags: ['sqlite'],
+    tags: ['benchmark', 'sqlite'],
     completed: true,
     version: 1,
     createdAt: new Date().toISOString(),
@@ -41,10 +41,10 @@ const initialTasks: Task[] = [
     id: 't-3',
     ownerUid: 'user-1',
     projectId: 'p-1',
-    title: 'Connect React bindings and Linear UI',
-    description: 'Wire up Wails bridge and polish dark theme styling.',
+    title: 'Incarn tactile parchment UI & typography',
+    description: 'Unify typography with Roboto, delicate 1px hairlines, and hardware optical diode sync pulses.',
     dueDate: '2026-11-12',
-    tags: ['react', 'wails'],
+    tags: ['design', 'incarn', 'roboto'],
     completed: false,
     version: 1,
     createdAt: new Date().toISOString(),
@@ -54,10 +54,10 @@ const initialTasks: Task[] = [
     id: 't-4',
     ownerUid: 'user-1',
     projectId: null,
-    title: 'Weekly planning review',
-    description: 'Review pending personal tasks outside projects.',
+    title: 'Review offline-first architecture roadmap',
+    description: 'Verify synchronization outbox retry mechanisms and conflict detection contracts.',
     dueDate: '2026-11-08',
-    tags: ['personal'],
+    tags: ['architecture', 'roadmap'],
     completed: false,
     version: 1,
     createdAt: new Date().toISOString(),
@@ -69,7 +69,7 @@ const initialProjects: Project[] = [
   {
     id: 'p-1',
     ownerUid: 'user-1',
-    name: 'Learn Wails',
+    name: 'Cloud Todo Core',
     version: 1,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -78,7 +78,7 @@ const initialProjects: Project[] = [
   {
     id: 'p-2',
     ownerUid: 'user-1',
-    name: 'Home Renovation',
+    name: 'Editorial Systems',
     version: 1,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -102,13 +102,13 @@ export const App: React.FC = () => {
   const [syncState, setSyncState] = useState<SyncState>('SYNCED');
   const [pendingCount, setPendingCount] = useState(0);
 
-  // Theme
+  // Theme (default to darkroom, toggleable to parchment)
   const [isDark, setIsDark] = useState(true);
 
   // Active devices
   const [devices, setDevices] = useState<DeviceSession[]>([
-    { sessionId: 's-1', deviceName: 'My Laptop', platform: 'windows', lastSeenAt: 'Just now', isCurrent: true },
-    { sessionId: 's-2', deviceName: 'Test Phone', platform: 'android', lastSeenAt: '2 hours ago', isCurrent: false },
+    { sessionId: 's-1', deviceName: 'Primary Desktop', platform: 'windows', lastSeenAt: 'Just now', isCurrent: true },
+    { sessionId: 's-2', deviceName: 'Companion Tablet', platform: 'android', lastSeenAt: '1 hour ago', isCurrent: false },
   ]);
 
   useEffect(() => {
@@ -118,6 +118,18 @@ export const App: React.FC = () => {
       document.documentElement.classList.remove('dark');
     }
   }, [isDark]);
+
+  // Global Ctrl+K listener
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setIsCommandOpen(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const currentProject = projects.find(p => p.id === selectedProjectId) || null;
   const isViewer = currentProject?.role === 'viewer';
@@ -175,7 +187,7 @@ export const App: React.FC = () => {
     const affectedCount = 1 + directChildren.length;
 
     const msg = affectedCount > 1
-      ? `Deleting "${task.title}" will also delete ${directChildren.length} subtask(s). Proceed?`
+      ? `Deleting "${task.title}" will also permanently remove ${directChildren.length} child subtask(s). Proceed?`
       : `Delete "${task.title}"?`;
 
     if (confirm(msg)) {
@@ -244,7 +256,7 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground antialiased font-sans">
+    <div className="flex h-screen w-screen overflow-hidden bg-paper dark:bg-ink text-ink dark:text-paper antialiased font-sans transition-colors">
       {/* Left Sidebar */}
       <Sidebar
         currentProject={selectedProjectId}
@@ -259,6 +271,9 @@ export const App: React.FC = () => {
         pendingCount={pendingCount}
         userEmail="siraj.altarhouni5@gmail.com"
         onOpenDevices={() => setIsDevicesOpen(true)}
+        onOpenCommand={() => setIsCommandOpen(true)}
+        isDark={isDark}
+        onToggleTheme={() => setIsDark(!isDark)}
       />
 
       {/* Center Task List */}

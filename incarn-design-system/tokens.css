@@ -1,0 +1,365 @@
+/* ==========================================================================
+   INCARN DESIGN SYSTEM - CSS DESIGN TOKENS & UTILITIES
+   A warm, tactile, analog-craft aesthetic for emotional & generative AI apps.
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Public+Sans:wght@400;500;600;700&display=swap');
+
+:root {
+  /* Surface & Paper Colors (Warm Parchment Tones) */
+  --color-paper: #f3ecdf;        /* Main light background (aged warm paper) */
+  --color-paper-2: #fbf6ec;      /* Card & elevated surface (pale cream paper) */
+  --color-paper-3: #ede3d2;      /* Neutral deep paper (soft warm beige) */
+  --color-paper-soft: #d8ccb8;   /* Muted paper tone */
+
+  /* Ink & Typography Colors (Deep Espresso / Charcoal) */
+  --color-ink: #241c15;          /* Primary dark background & primary text (rich dark roasted ink) */
+  --color-ink-2: #3a2e23;        /* Secondary dark / interactive hover ink */
+  --color-ink-soft: #544636;     /* Body copy & muted descriptions */
+
+  /* Vintage & Sepia Accents */
+  --color-sepia: #7a6248;        /* Timeless sepia (dates, subtitles, eyebrow tags) */
+  --color-sepia-soft: #b4a184;   /* Soft sepia (borders, metadata, secondary icons) */
+
+  /* Structural Hairlines & Borders */
+  --color-line: rgba(36, 28, 21, 0.14);      /* Subtle border on paper (#241c1524) */
+  --color-line-ink: rgba(243, 236, 223, 0.16); /* Subtle border on dark ink (#f3ecdf29) */
+
+  /* Vivid Call-To-Action Accents */
+  --color-ember: #c4703a;        /* Primary CTA & warm highlight (burnt terracotta / ember glow) */
+  --color-ember-deep: #a2542a;   /* Ember hover / active state */
+  --color-gold: #b8863b;         /* Antique gold (5-star ratings, premium badges) */
+  --color-sage: #3e5b52;         /* Diode green & verification checkmarks (heritage sage) */
+
+  /* Typography */
+  --font-display: 'Newsreader', Georgia, 'Times New Roman', serif;
+  --font-ui: 'Public Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* Shadows */
+  --shadow-dropzone: 0 30px 70px -30px rgba(36, 28, 21, 0.35);
+  --shadow-ember-glow: 0 12px 28px -10px rgba(196, 112, 58, 0.6);
+  --shadow-ember-glow-lg: 0 14px 30px -10px rgba(196, 112, 58, 0.6);
+  --shadow-card: 0 24px 48px rgba(0, 0, 0, 0.1), 0 8px 16px rgba(0, 0, 0, 0.05), inset 0 1px rgba(255, 255, 255, 0.4);
+  --shadow-card-elevated: 0 30px 60px -25px rgba(0, 0, 0, 0.5);
+}
+
+/* ==========================================================================
+   KEYFRAME ANIMATIONS
+   ========================================================================== */
+
+/* 1. Organic Breathing Scale (Used on Medallions, Live Previews) */
+@keyframes breathe {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.04);
+  }
+}
+
+/* 2. Photo Scanner Sweep (Vertical light beam scanning historical images) */
+@keyframes sweep {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(240%);
+  }
+}
+
+/* 3. Horizontal Attention Nudge (Inviting interaction on slider drag handles) */
+@keyframes wiggle-x {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-6px);
+  }
+  75% {
+    transform: translateX(6px);
+  }
+}
+
+/* 4. Hardware Diode Pulse (Breathing status light with multi-layer color-mix rings) */
+@keyframes diode-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-sage) 20%, transparent),
+                0 0 6px 1px color-mix(in srgb, var(--color-sage) 55%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-sage) 28%, transparent),
+                0 0 12px 3px color-mix(in srgb, var(--color-sage) 82%, transparent);
+  }
+}
+
+/* 5. Smooth Elevation Fade-In */
+@keyframes fade-in {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 6. AI Generative Fillbar Progress */
+@keyframes fillbar {
+  0% {
+    width: 8%;
+  }
+  100% {
+    width: 82%;
+  }
+}
+
+/* 7. Rotating Accent Glow */
+@keyframes ai-border-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* 8. Scanning Beam Horizontal Slide */
+@keyframes preflight-scan-slide {
+  0% {
+    left: -34%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+/* Animation Utility Classes */
+.animate-breathe {
+  animation: breathe 4s ease-in-out infinite;
+}
+
+.animate-breathe-fast {
+  animation: breathe 3.5s ease-in-out infinite;
+}
+
+.animate-sweep {
+  animation: sweep 2.6s ease-in-out infinite;
+}
+
+.animate-wiggle-x {
+  animation: wiggle-x 1.6s ease-in-out infinite;
+}
+
+.animate-diode {
+  animation: diode-pulse 2s ease-in-out infinite;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.5s ease-out forwards;
+}
+
+/* ==========================================================================
+   BASE STYLES & RESET
+   ========================================================================== */
+
+body {
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Headings use the literary serif Newsreader */
+h1, h2, h3, .font-display {
+  font-family: var(--font-display);
+  font-feature-settings: 'cv01' on, 'cv02' on;
+  letter-spacing: -0.02em;
+}
+
+/* ==========================================================================
+   REUSABLE COMPONENT PATTERNS
+   ========================================================================== */
+
+/* 1. Pill CTA Buttons */
+.btn-ember {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background-color: var(--color-ember);
+  color: var(--color-paper-2);
+  font-family: var(--font-ui);
+  font-weight: 700;
+  font-size: 1.125rem;
+  padding: 0.95rem 2.25rem;
+  text-decoration: none;
+  box-shadow: var(--shadow-ember-glow);
+  transition: background-color 0.15s ease, transform 0.15s ease;
+  cursor: pointer;
+  border: none;
+}
+
+.btn-ember:hover {
+  background-color: var(--color-ember-deep);
+  transform: translateY(-1px);
+}
+
+.btn-ember:active {
+  transform: translateY(0);
+}
+
+.btn-ink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background-color: var(--color-ink);
+  color: var(--color-paper-2);
+  font-family: var(--font-ui);
+  font-weight: 700;
+  font-size: 1.125rem;
+  padding: 0.95rem 2.25rem;
+  text-decoration: none;
+  transition: background-color 0.15s ease;
+  cursor: pointer;
+  border: none;
+}
+
+.btn-ink:hover {
+  background-color: var(--color-ink-2);
+}
+
+.btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  border: 1px solid var(--color-sepia-soft);
+  color: inherit;
+  font-family: var(--font-ui);
+  font-weight: 600;
+  font-size: 1rem;
+  padding: 0.8rem 1.75rem;
+  text-decoration: none;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.btn-outline:hover {
+  border-color: currentColor;
+}
+
+/* 2. Eyebrow Category Tags */
+.eyebrow {
+  display: inline-block;
+  font-family: var(--font-ui);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  color: var(--color-ember-deep);
+}
+
+.eyebrow-sepia {
+  display: inline-block;
+  font-family: var(--font-ui);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--color-sepia);
+}
+
+/* 3. Tactile Dropzone Container */
+.dropzone-container {
+  border-radius: 20px;
+  border: 1px solid var(--color-line);
+  background-color: var(--color-paper-2);
+  padding: 0.875rem;
+  box-shadow: var(--shadow-dropzone);
+}
+
+.dropzone-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  border: 2px dashed var(--color-sepia-soft);
+  background-color: rgba(142, 115, 85, 0.04);
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dropzone-box:hover {
+  border-color: var(--color-ember);
+  background-color: rgba(196, 112, 58, 0.08);
+}
+
+/* 4. Split-Screen Comparison Slider */
+.split-slider-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  border-radius: 1rem;
+  background-color: #241c15;
+  user-select: none;
+  touch-action: pan-y;
+  cursor: col-resize;
+}
+
+.split-slider-wrapper img,
+.split-slider-wrapper video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.split-slider-divider {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background-color: #ffffff;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
+  z-index: 10;
+  transform: translateX(-50%);
+}
+
+.split-slider-handle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 9999px;
+  background-color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* 5. Numbered Process Circle */
+.step-number {
+  width: 4rem;
+  height: 4rem;
+  margin: 0 auto;
+  border-radius: 9999px;
+  border: 1.5px solid var(--color-ember);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 1.875rem;
+  color: var(--color-ember-deep);
+}
+
