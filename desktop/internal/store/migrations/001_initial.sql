@@ -66,3 +66,4 @@ CREATE TABLE IF NOT EXISTS sync_state (
     cursor TEXT NOT NULL DEFAULT '',
     last_synced_at TEXT
 );
+

@@ -126,3 +126,4 @@ func (a *App) ShowNotification(title, message, category string) {
 		_ = a.notifier.ShowToast(title, message, category, "")
 	}
 }
+

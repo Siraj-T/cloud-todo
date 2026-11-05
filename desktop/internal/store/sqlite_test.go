@@ -241,3 +241,4 @@ func TestCascadeDeletion(t *testing.T) {
 		t.Errorf("expected outbox delete mutation, got %v", outboxItems)
 	}
 }
+

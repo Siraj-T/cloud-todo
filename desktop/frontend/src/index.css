@@ -5,59 +5,81 @@
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 221 83% 53%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 221 83% 53%;
-    --radius: 0.5rem;
+    --foreground: 240 10% 4%;
+    --card: 0 0% 98%;
+    --card-foreground: 240 10% 4%;
+    --border: 240 6% 90%;
+    --primary: 243 75% 59%;
+    --primary-foreground: 0 0% 100%;
+    --radius: 0.75rem;
   }
 
   .dark {
-    --background: 224 71% 4%;
-    --foreground: 210 20% 98%;
-    --card: 224 71% 6%;
-    --card-foreground: 210 20% 98%;
-    --popover: 224 71% 6%;
-    --popover-foreground: 210 20% 98%;
-    --primary: 217 91% 60%;
-    --primary-foreground: 224 71% 4%;
-    --secondary: 217 19% 15%;
-    --secondary-foreground: 210 20% 98%;
-    --muted: 217 19% 13%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 217 19% 15%;
-    --accent-foreground: 210 20% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 20% 98%;
-    --border: 217 19% 16%;
-    --input: 217 19% 16%;
-    --ring: 217 91% 60%;
+    --background: 230 14% 5%;       /* #0b0c0e */
+    --foreground: 240 5% 96%;        /* #f4f4f5 */
+    --card: 230 12% 8%;              /* #121316 */
+    --card-foreground: 240 5% 96%;
+    --popover: 230 11% 10%;          /* #18191e */
+    --popover-foreground: 240 5% 96%;
+    --primary: 243 75% 59%;          /* #5e6ad2 Linear Indigo */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 230 10% 12%;        /* #1c1e24 */
+    --secondary-foreground: 240 5% 90%;
+    --muted: 230 10% 12%;
+    --muted-foreground: 240 5% 55%;  /* #888991 */
+    --accent: 230 10% 14%;
+    --accent-foreground: 240 5% 96%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 100% / 0.07;      /* Hair-thin 7% white border */
+    --input: 0 0% 100% / 0.08;
+    --ring: 243 75% 59%;
   }
 }
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   user-select: none;
+  background-color: #0b0c0e;
+  color: #f4f4f5;
+  letter-spacing: -0.011em;
 }
 
-/* Custom scrollbar for sleek modern look */
+code, kbd, pre, .font-mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Raycast Glass & Depth Utilities */
+.raycast-panel {
+  background: rgba(18, 19, 22, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.07),
+              0 24px 48px -12px rgba(0, 0, 0, 0.8),
+              inset 0 1px 0 0 rgba(255, 255, 255, 0.12);
+}
+
+.raycast-subtle {
+  background: rgba(255, 255, 255, 0.03);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+.raycast-subtle:hover {
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.09);
+}
+
+.raycast-focus {
+  transition: all 0.15s ease-out;
+}
+.raycast-focus:focus-within {
+  box-shadow: 0 0 0 1px #5e6ad2, 0 0 16px -2px rgba(94, 106, 210, 0.4);
+}
+
+/* Custom modern subtle scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
@@ -67,5 +89,5 @@ body {
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.22);
 }

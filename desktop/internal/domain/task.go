@@ -57,3 +57,4 @@ func CanMutateTasks(role string) bool {
 func CanManageProject(role string) bool {
 	return role == RoleOwner
 }
+
