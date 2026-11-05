@@ -1,0 +1,48 @@
+# Binaries & build artifacts
+bin/
+build/bin/
+dist/
+frontend/dist/
+frontend/build/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Go & SQLite
+*.db
+*.db-shm
+*.db-wal
+*.db-journal
+
+# Dependencies
+node_modules/
+frontend/node_modules/
+vendor/
+
+# Environment & Secrets
+.env
+.env.*
+!.env.example
+*.local
+service-account.json
+credentials.json
+
+# Firebase & Emulators
+.firebase/
+*-debug.log
+.firebaserc.local
+
+# IDE & OS
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Temp & Artifacts
+pdf_pages/
+tmp/
