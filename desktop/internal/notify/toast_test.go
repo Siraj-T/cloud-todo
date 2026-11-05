@@ -24,3 +24,4 @@ func TestNotificationPreferences(t *testing.T) {
 		t.Error("expected CategoryInvitation to remain enabled")
 	}
 }
+

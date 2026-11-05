@@ -30,3 +30,4 @@ func ValidateHierarchy(task *Task, parent *Task) error {
 
 	return nil
 }
+

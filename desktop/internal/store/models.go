@@ -43,3 +43,4 @@ type TaskFilter struct {
 	IncludeDeleted  bool
 	IncludeCompleted bool
 }
+

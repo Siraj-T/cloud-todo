@@ -71,3 +71,4 @@ Designed with a sleek Linear/Raycast aesthetic, robust offline durability, optim
 ## License
 
 MIT © [Siraj-T](https://github.com/Siraj-T)
+

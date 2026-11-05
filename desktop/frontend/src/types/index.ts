@@ -40,3 +40,4 @@ export interface DeviceSession {
   lastSeenAt: string;
   isCurrent: boolean;
 }
+
