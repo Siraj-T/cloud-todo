@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Incarn Aesthetic Template — Analog Craft & Generative AI</title>
+  
+  <!-- Fonts: Newsreader (Editorial Serif) & Public Sans (Clean UI Sans) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN for quick preview -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            paper: '#f3ecdf',
+            'paper-2': '#fbf6ec',
+            'paper-3': '#ede3d2',
+            'paper-soft': '#d8ccb8',
+            ink: '#241c15',
+            'ink-2': '#3a2e23',
+            'ink-soft': '#544636',
+            sepia: '#7a6248',
+            'sepia-soft': '#b4a184',
+            ember: '#c4703a',
+            'ember-deep': '#a2542a',
+            gold: '#b8863b',
+            sage: '#3e5b52',
+            line: 'rgba(36, 28, 21, 0.14)',
+            'line-ink': 'rgba(243, 236, 223, 0.16)',
+          },
+          fontFamily: {
+            display: ['Newsreader', 'Georgia', 'serif'],
+            ui: ['"Public Sans"', 'sans-serif'],
+          },
+          animation: {
+            breathe: 'breathe 4s ease-in-out infinite',
+            'wiggle-x': 'wiggle-x 1.6s ease-in-out infinite',
+            'diode-pulse': 'diode-pulse 2s ease-in-out infinite',
+          },
+          keyframes: {
+            breathe: {
+              '0%, 100%': { transform: 'scale(1)' },
+              '50%': { transform: 'scale(1.04)' },
+            },
+            'wiggle-x': {
+              '0%, 100%': { transform: 'translateX(0)' },
+              '25%': { transform: 'translateX(-6px)' },
+              '75%': { transform: 'translateX(6px)' },
+            },
+            'diode-pulse': {
+              '0%, 100%': {
+                boxShadow: '0 0 0 3px rgba(62, 91, 82, 0.2), 0 0 6px 1px rgba(62, 91, 82, 0.55)',
+              },
+              '50%': {
+                boxShadow: '0 0 0 4px rgba(62, 91, 82, 0.28), 0 0 12px 3px rgba(62, 91, 82, 0.82)',
+              },
+            },
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    /* Custom Utilities & Polish */
+    body {
+      background-color: #f3ecdf;
+      color: #241c15;
+      font-family: 'Public Sans', sans-serif;
+    }
+    .font-display {
+      font-family: 'Newsreader', Georgia, serif;
+    }
+  </style>
+</head>
+<body class="antialiased selection:bg-ember selection:text-paper">
+
+  <!-- =========================================================================
+       NAVIGATION BAR
+       Fixed header, warm translucent parchment blur, hairline border
+       ========================================================================= -->
+  <nav class="fixed top-0 z-50 w-full border-b border-line bg-paper/90 backdrop-blur-[10px]">
+    <div class="mx-auto flex max-w-[1240px] items-center justify-between px-4 py-3 sm:px-8 sm:py-[18px] lg:px-14">
+      <a href="#" class="flex items-center gap-3 text-ink group">
+        <!-- Cameo / Medallion SVG Logo -->
+        <svg class="h-[34px] w-auto transition-transform group-hover:scale-105" viewBox="0 0 88 116" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="44" cy="14" rx="8.5" ry="7.5" stroke="currentColor" stroke-width="3.5" />
+          <line x1="44" y1="21" x2="44" y2="26" stroke="currentColor" stroke-width="3.5" />
+          <ellipse cx="44" cy="68" rx="36" ry="44" stroke="currentColor" stroke-width="4.5" />
+          <ellipse cx="44" cy="68" rx="27" ry="34" stroke="currentColor" stroke-width="1.6" fill="rgba(142,115,85,0.12)" />
+          <path d="M18 70 Q 31 61 44 69 T 70 69" fill="none" stroke="#8E7355" stroke-linecap="round" stroke-width="2.6" />
+          <path d="M18 80 Q 31 72 44 79 T 70 79" fill="none" stroke="#C4703A" stroke-linecap="round" stroke-width="2.3" />
+        </svg>
+        <span class="font-display text-2xl font-medium tracking-tight">Incarn</span>
+      </a>
+      <div class="flex items-center gap-6">
+        <a href="#transformation" class="hidden sm:inline-block text-sm font-medium text-ink-soft hover:text-ink transition-colors">Showcase</a>
+        <a href="#how-it-works" class="hidden sm:inline-block text-sm font-medium text-ink-soft hover:text-ink transition-colors">How it works</a>
+        <a href="#pricing" class="hidden sm:inline-block text-sm font-medium text-ink-soft hover:text-ink transition-colors">Pricing</a>
+        <a href="#upload" class="rounded-full bg-ink px-5 py-2 text-sm font-bold text-paper-2 hover:bg-ink-2 transition-colors">Try free</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- =========================================================================
+       HERO SECTION
+       2-Column Split: Editorial Heading & Value Proposition vs Tactile Dropzone
+       ========================================================================= -->
+  <section class="mx-auto max-w-[1240px] px-4 pt-28 pb-10 sm:px-8 sm:pt-36 lg:px-14">
+    <div class="grid items-center gap-10 lg:grid-cols-[1.03fr_0.97fr] lg:gap-16">
+      
+      <!-- Left Column: Copy & Trust -->
+      <div>
+        <!-- Pill / Eyebrow Header -->
+        <span class="inline-flex items-baseline gap-3 border-b-[1.5px] border-sepia pb-2">
+          <span class="whitespace-nowrap font-display text-[26px] italic leading-none text-ember-deep sm:text-[34px]">
+            ≈ 1 min
+          </span>
+          <span class="text-[11px] font-bold uppercase tracking-[.18em] text-sepia sm:text-[13px]">
+            from photo to living memory
+          </span>
+        </span>
+
+        <!-- Master Title -->
+        <h1 class="mt-5 font-display text-[44px] font-medium leading-[1.02] tracking-[-.02em] sm:mt-6 sm:text-6xl lg:text-[76px] lg:leading-[1.0]">
+          <span class="mb-3 block text-balance font-ui text-[12px] font-semibold uppercase tracking-[.16em] text-ink-soft sm:mb-4 sm:text-[13px]">
+            Animate old photos with AI
+          </span>
+          See them smile, breathe, and live again.
+        </h1>
+
+        <!-- Subtitle Lede -->
+        <p class="mt-4 max-w-[44ch] text-[17px] leading-normal text-ink-soft sm:mt-6 sm:text-[22px]">
+          Add a family photo. We bring it to life as a short video to keep and share with your loved ones.
+        </p>
+
+        <!-- Feature Checkmarks -->
+        <div class="mt-7 flex flex-wrap items-center gap-x-6 gap-y-2">
+          <span class="flex items-center gap-2 text-[15px] font-semibold text-ink-2">
+            <span class="text-lg leading-none text-sage font-bold">✓</span>
+            First animation free
+          </span>
+          <span class="flex items-center gap-2 text-[15px] font-semibold text-ink-2">
+            <span class="text-lg leading-none text-sage font-bold">✓</span>
+            No subscription
+          </span>
+          <span class="flex items-center gap-2 text-[15px] font-semibold text-ink-2">
+            <span class="text-lg leading-none text-sage font-bold">✓</span>
+            Your photos stay private
+          </span>
+        </div>
+
+        <!-- Social Proof Rating -->
+        <div class="mt-6 inline-flex items-center gap-2">
+          <span class="text-[15px] leading-none tracking-[2px] text-gold">★★★★★</span>
+          <span class="font-display text-[17px] leading-none text-ink font-semibold">4.9 / 5</span>
+          <span class="text-sm text-sepia">(247 reviews)</span>
+        </div>
+      </div>
+
+      <!-- Right Column: Tactile Dropzone -->
+      <div class="w-full max-w-xl mx-auto lg:mx-0" id="upload">
+        <div class="rounded-[20px] border border-line bg-paper-2 p-3.5 shadow-[0_30px_70px_-30px_rgba(36,28,21,0.35)]">
+          <div class="flex cursor-pointer flex-col items-center justify-center rounded-[14px] border-2 border-dashed border-sepia-soft bg-[rgba(142,115,85,0.04)] px-5 py-8 text-center transition-all duration-200 active:scale-[0.98] hover:border-ember hover:bg-[rgba(196,112,58,0.08)] sm:px-8 sm:py-12">
+            
+            <!-- Breathing Cameo Icon -->
+            <svg class="h-16 w-auto animate-breathe text-ink sm:h-[96px]" viewBox="0 0 88 116" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <ellipse cx="44" cy="14" rx="8.5" ry="7.5" stroke="currentColor" stroke-width="3.5" />
+              <line x1="44" y1="21" x2="44" y2="26" stroke="currentColor" stroke-width="3.5" />
+              <ellipse cx="44" cy="68" rx="36" ry="44" stroke="currentColor" stroke-width="4.5" />
+              <ellipse cx="44" cy="68" rx="27" ry="34" stroke="currentColor" stroke-width="1.6" fill="rgba(142,115,85,0.12)" />
+              <path d="M18 70 Q 31 61 44 69 T 70 69" fill="none" stroke="#8E7355" stroke-linecap="round" stroke-width="2.6" />
+              <path d="M18 80 Q 31 72 44 79 T 70 79" fill="none" stroke="#C4703A" stroke-linecap="round" stroke-width="2.3" />
+            </svg>
+
+            <p class="mt-5 font-display text-xl text-ink sm:text-[28px] font-medium">
+              Choose a photo to bring it to life
+            </p>
+            <p class="mt-2 text-sm text-sepia sm:text-base">
+              JPEG, PNG, WebP or HEIC, up to 10 MB
+            </p>
+
+            <button class="mt-6 inline-flex items-center gap-2 rounded-full bg-ember px-7 py-3.5 text-[18px] font-bold text-paper-2 shadow-[0_10px_24px_-8px_rgba(196,112,58,0.6)] hover:bg-ember-deep transition-all">
+              Bring my photo to life
+            </button>
+            <p class="mt-3 text-[13px] text-sepia">
+              Min. 300 x 300 px
+            </p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       METRICS / STATS BAR
+       Fine top/bottom hairline borders, 4 columns on desktop, 2 on mobile
+       ========================================================================= -->
+  <section class="mx-auto max-w-[1240px] px-4 pt-6 pb-14 sm:px-8 lg:px-14">
+    <div class="grid grid-cols-2 gap-6 border-t border-b border-line py-7 sm:flex sm:items-center sm:justify-around sm:gap-0">
+      <div class="text-center">
+        <p class="font-display text-3xl text-ink sm:text-[40px] font-medium">12,000+</p>
+        <p class="mt-1 text-sm tracking-[.04em] text-sepia">photos animated</p>
+      </div>
+      <div class="hidden sm:block h-10 w-px bg-line"></div>
+      <div class="text-center">
+        <p class="font-display text-3xl text-ink sm:text-[40px] font-medium">4.9 / 5</p>
+        <p class="mt-1 text-sm tracking-[.04em] text-sepia">average rating</p>
+      </div>
+      <div class="hidden sm:block h-10 w-px bg-line"></div>
+      <div class="text-center">
+        <p class="font-display text-3xl text-ink sm:text-[40px] font-medium">&lt; 2 min</p>
+        <p class="mt-1 text-sm tracking-[.04em] text-sepia">creation time</p>
+      </div>
+      <div class="hidden sm:block h-10 w-px bg-line"></div>
+      <div class="text-center">
+        <p class="font-display text-3xl text-ink sm:text-[40px] font-medium">European</p>
+        <p class="mt-1 text-sm tracking-[.04em] text-sepia">data privacy & hosting</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       DARK INK INVERSION SECTION: INTERACTIVE BEFORE/AFTER SLIDER
+       Dark background (#241c15), paper typography, interactive split slider
+       ========================================================================= -->
+  <section id="transformation" class="bg-ink text-paper py-16 sm:py-24">
+    <div class="mx-auto max-w-[1240px] px-4 sm:px-8 lg:px-14">
+      <div class="text-center">
+        <p class="text-[13px] font-bold uppercase tracking-[.22em] text-ember">
+          The transformation
+        </p>
+        <h2 class="mt-4 text-balance font-display text-[32px] font-medium leading-[1.05] text-paper sm:text-[52px]">
+          From a frozen photo to a living memory
+        </h2>
+      </div>
+
+      <!-- Interactive Split Comparison Slider -->
+      <div class="mx-auto mt-10 max-w-xl sm:mt-14">
+        <div id="split-slider" class="relative aspect-[3/4] w-full cursor-col-resize select-none overflow-hidden rounded-2xl bg-stone-900 touch-pan-y" tabindex="0">
+          
+          <!-- Animated State (Simulated Video/Background Layer) -->
+          <div class="absolute inset-0 bg-stone-800 flex items-center justify-center">
+            <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=1000&q=80" alt="Animated portrait" class="absolute inset-0 h-full w-full object-cover filter contrast-105" />
+            <div class="absolute bottom-4 right-4 rounded-full bg-black/60 px-3 py-1 text-xs text-white backdrop-blur-sm">
+              Animated memory
+            </div>
+          </div>
+
+          <!-- Static Original Photo (Clipped Top Layer) -->
+          <div id="slider-clipped" class="absolute inset-0 overflow-hidden" style="clip-path: inset(0 50% 0 0);">
+            <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=1000&q=80" alt="Original vintage photo" class="absolute inset-0 h-full w-full object-cover filter sepia brightness-90 grayscale" />
+            <div class="absolute bottom-4 left-4 rounded-full bg-black/60 px-3 py-1 text-xs text-white backdrop-blur-sm">
+              Original photo (1954)
+            </div>
+          </div>
+
+          <!-- Divider Handle -->
+          <div id="slider-divider" class="absolute top-0 bottom-0 z-10 w-0.5 bg-white shadow-lg" style="left: 50%; transform: translateX(-50%);">
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+              <div class="relative h-10 w-10 animate-wiggle-x">
+                <span class="absolute inset-0 rounded-full bg-white opacity-75 animate-ping"></span>
+                <div class="relative flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-lg text-ink font-bold">
+                  ⇄
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <p class="mt-4 text-center text-sm text-paper-soft">
+          Drag the slider to compare the original snapshot with the animated living memory.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       FAMOUS FACES GALLERY
+       Cream background (#fbf6ec), hover-to-animate cards
+       ========================================================================= -->
+  <section class="bg-paper-2 px-4 py-16 sm:px-8 sm:py-24">
+    <div class="mx-auto max-w-5xl">
+      <h2 class="text-center font-display text-[32px] font-medium leading-[1.05] sm:text-[52px]">
+        Famous faces, brought back to life
+      </h2>
+      <p class="mt-3 text-center text-sm text-ink-soft sm:mt-4 sm:text-base">
+        Hover to watch them come to life. Real historical archives.
+      </p>
+
+      <div class="mt-10 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
+        <!-- Card 1 -->
+        <div class="group relative cursor-pointer overflow-hidden rounded-2xl bg-paper shadow-card transition-transform active:scale-[0.98]">
+          <div class="aspect-[3/4] w-full overflow-hidden bg-stone-300">
+            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=600&q=80" alt="Historical figure" class="h-full w-full object-cover filter sepia transition-transform duration-500 group-hover:scale-105" />
+          </div>
+          <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent px-4 pb-4 pt-12">
+            <p class="text-base font-semibold text-white">Victor Hugo</p>
+            <p class="text-xs text-white/70">1884 · Hauteville House</p>
+          </div>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="group relative cursor-pointer overflow-hidden rounded-2xl bg-paper shadow-card transition-transform active:scale-[0.98]">
+          <div class="aspect-[3/4] w-full overflow-hidden bg-stone-300">
+            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80" alt="Historical figure" class="h-full w-full object-cover filter sepia transition-transform duration-500 group-hover:scale-105" />
+          </div>
+          <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent px-4 pb-4 pt-12">
+            <p class="text-base font-semibold text-white">Marie Curie</p>
+            <p class="text-xs text-white/70">1911 · Sorbonne</p>
+          </div>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="group relative cursor-pointer overflow-hidden rounded-2xl bg-paper shadow-card transition-transform active:scale-[0.98]">
+          <div class="aspect-[3/4] w-full overflow-hidden bg-stone-300">
+            <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=600&q=80" alt="Historical figure" class="h-full w-full object-cover filter sepia transition-transform duration-500 group-hover:scale-105" />
+          </div>
+          <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent px-4 pb-4 pt-12">
+            <p class="text-base font-semibold text-white">Marcel Proust</p>
+            <p class="text-xs text-white/70">1900 · Paris</p>
+          </div>
+        </div>
+
+        <!-- Card 4 -->
+        <div class="group relative cursor-pointer overflow-hidden rounded-2xl bg-paper shadow-card transition-transform active:scale-[0.98]">
+          <div class="aspect-[3/4] w-full overflow-hidden bg-stone-300">
+            <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=600&q=80" alt="Historical figure" class="h-full w-full object-cover filter sepia transition-transform duration-500 group-hover:scale-105" />
+          </div>
+          <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent px-4 pb-4 pt-12">
+            <p class="text-base font-semibold text-white">Sarah Bernhardt</p>
+            <p class="text-xs text-white/70">1878 · Belle Époque</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       HOW IT WORKS: 3 STEPS, 2 MINUTES
+       Numbered circled badges with amber ring
+       ========================================================================= -->
+  <section id="how-it-works" class="mx-auto max-w-[1240px] px-4 py-16 sm:px-8 sm:py-24 lg:px-14">
+    <div class="text-center">
+      <p class="text-[13px] font-bold uppercase tracking-[.22em] text-ember-deep">
+        How it works
+      </p>
+      <h2 class="mt-4 font-display text-[32px] font-medium leading-[1.05] sm:text-[52px]">
+        Three steps, two minutes
+      </h2>
+    </div>
+
+    <div class="mt-12 grid gap-10 sm:grid-cols-3 sm:gap-8">
+      <div class="text-center">
+        <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full border-[1.5px] border-ember font-display text-3xl text-ember-deep">
+          1
+        </div>
+        <h3 class="mt-5 font-display text-2xl font-medium sm:text-[28px]">
+          Add your photo
+        </h3>
+        <p class="mx-auto mt-2.5 max-w-[30ch] text-[17px] leading-[1.55] text-ink-soft">
+          A portrait, a couple, or family archives. Damaged or black & white photos work beautifully.
+        </p>
+      </div>
+
+      <div class="text-center">
+        <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full border-[1.5px] border-ember font-display text-3xl text-ember-deep">
+          2
+        </div>
+        <h3 class="mt-5 font-display text-2xl font-medium sm:text-[28px]">
+          We bring it to life
+        </h3>
+        <p class="mx-auto mt-2.5 max-w-[30ch] text-[17px] leading-[1.55] text-ink-soft">
+          In under two minutes, generative AI reveals gentle eye glances, natural smiles, and subtle breathing.
+        </p>
+      </div>
+
+      <div class="text-center">
+        <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full border-[1.5px] border-ember font-display text-3xl text-ember-deep">
+          3
+        </div>
+        <h3 class="mt-5 font-display text-2xl font-medium sm:text-[28px]">
+          Keep it, share it
+        </h3>
+        <p class="mx-auto mt-2.5 max-w-[30ch] text-[17px] leading-[1.55] text-ink-soft">
+          Download high-definition video files with zero watermarks. Send them instantly to loved ones.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       PRICING TIERS: PAY FOR WHAT YOU ANIMATE
+       Dark mode section with inverted "Most Popular" card in warm tactile paper
+       ========================================================================= -->
+  <section id="pricing" class="bg-ink text-paper py-16 sm:py-24">
+    <div class="mx-auto max-w-[1100px] px-4 sm:px-8 lg:px-14">
+      <div class="text-center">
+        <p class="text-[13px] font-bold uppercase tracking-[.22em] text-ember">
+          Pricing
+        </p>
+        <h2 class="mt-4 text-balance font-display text-[32px] font-medium leading-[1.05] text-paper sm:text-[52px]">
+          Pay for what you animate
+        </h2>
+        <p class="mx-auto mt-4 max-w-[44ch] text-base text-paper-soft sm:text-[19px]">
+          No subscription, no recurring renewals. Your credits never expire.
+        </p>
+      </div>
+
+      <div class="mt-12 grid gap-6 sm:grid-cols-3">
+        <!-- Tier 1: Free -->
+        <div class="rounded-2xl border border-line-ink bg-white/5 p-8 flex flex-col justify-between">
+          <div>
+            <p class="font-display text-[26px] text-paper">The first one</p>
+            <p class="mt-3.5 font-display text-5xl text-paper">Free</p>
+            <p class="mt-1 text-[15px] text-sepia-soft">A preview, just to try</p>
+          </div>
+          <a href="#upload" class="mt-8 block rounded-full border border-sepia-soft py-3 text-center font-semibold text-paper hover:border-paper transition-colors">
+            Get started
+          </a>
+        </div>
+
+        <!-- Tier 2: The Family (Inverted Highlighted Card) -->
+        <div class="relative rounded-2xl bg-paper p-8 text-ink shadow-[0_30px_60px_-25px_rgba(0,0,0,0.5)] flex flex-col justify-between">
+          <span class="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-ember-deep px-4 py-1 text-xs font-bold uppercase tracking-[.1em] text-paper-2">
+            Most popular
+          </span>
+          <div>
+            <p class="font-display text-[26px]">The family pack</p>
+            <p class="mt-3.5 font-display text-5xl font-medium">
+              €11.99
+              <span class="ml-1 whitespace-nowrap text-xl text-sepia">· 10 photos</span>
+            </p>
+            <p class="mt-1 text-[15px] text-sepia">€1.20 per animated photo</p>
+          </div>
+          <a href="#upload" class="mt-8 block rounded-full bg-ember py-3.5 text-center text-[19px] font-bold text-paper-2 hover:bg-ember-deep shadow-[0_10px_24px_-8px_rgba(196,112,58,0.6)] transition-all">
+            Get started
+          </a>
+        </div>
+
+        <!-- Tier 3: The Archive -->
+        <div class="rounded-2xl border border-line-ink bg-white/5 p-8 flex flex-col justify-between">
+          <div>
+            <p class="font-display text-[26px] text-paper">The heritage archive</p>
+            <p class="mt-3.5 font-display text-5xl text-paper">
+              €24.99
+              <span class="ml-1 whitespace-nowrap text-xl text-sepia-soft">· 25 photos</span>
+            </p>
+            <p class="mt-1 text-[15px] text-sepia-soft">€1.00 per photo · best value</p>
+          </div>
+          <a href="#upload" class="mt-8 block rounded-full border border-sepia-soft py-3 text-center font-semibold text-paper hover:border-paper transition-colors">
+            Get started
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       FOOTER
+       Paper 2 background, 5 columns, hairline top border
+       ========================================================================= -->
+  <footer class="border-t border-line bg-paper-2 px-4 pt-12 pb-8 sm:px-8 sm:pt-16 sm:pb-10 lg:px-14">
+    <div class="mx-auto max-w-[1240px] flex flex-col sm:flex-row items-center justify-between gap-6">
+      <div class="flex items-center gap-3">
+        <span class="font-display text-xl font-medium">Incarn</span>
+        <span class="text-xs text-sepia">© 2026. Made with care in Europe.</span>
+      </div>
+      <div class="flex items-center gap-6 text-sm text-ink-soft">
+        <a href="#" class="hover:text-ink">Terms</a>
+        <a href="#" class="hover:text-ink">Privacy</a>
+        <a href="#" class="hover:text-ink">Contact</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Interactive Slider Script -->
+  <script>
+    const slider = document.getElementById('split-slider');
+    const clipped = document.getElementById('slider-clipped');
+    const divider = document.getElementById('slider-divider');
+
+    let isDragging = false;
+
+    function updateSlider(x) {
+      const rect = slider.getBoundingClientRect();
+      let percent = ((x - rect.left) / rect.width) * 100;
+      percent = Math.max(0, Math.min(100, percent));
+
+      clipped.style.clipPath = `inset(0 ${100 - percent}% 0 0)`;
+      divider.style.left = `${percent}%`;
+    }
+
+    slider.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      updateSlider(e.clientX);
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      updateSlider(e.clientX);
+    });
+
+    window.addEventListener('mouseup', () => {
+      isDragging = false;
+    });
+
+    slider.addEventListener('touchstart', (e) => {
+      isDragging = true;
+      updateSlider(e.touches[0].clientX);
+    });
+
+    window.addEventListener('touchmove', (e) => {
+      if (!isDragging) return;
+      updateSlider(e.touches[0].clientX);
+    });
+
+    window.addEventListener('touchend', () => {
+      isDragging = false;
+    });
+  </script>
+</body>
+</html>
+
