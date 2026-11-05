@@ -1,0 +1,12 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Clients must never read or write application data directly in Firestore.
+    // All access must pass through the authenticated Go sync API which enforces
+    // device session validity, ownership, and project roles using the Admin SDK.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
