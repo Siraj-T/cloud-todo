@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    /* Incarn Parchment Light Theme */
+    /* Incarn Parchment Light Theme (Primary Default) */
     --background: 40 43% 91%;        /* #f3ecdf warm aged paper */
     --foreground: 24 24% 11%;        /* #241c15 roasted ink */
     --card: 43 65% 95%;              /* #fbf6ec elevated cream paper */
@@ -17,14 +17,14 @@
     --secondary-foreground: 24 24% 11%;
     --muted: 38 35% 88%;
     --muted-foreground: 28 22% 27%;  /* #544636 soft ink */
-    --accent: 38 35% 88%;
+    --accent: 43 65% 95%;
     --accent-foreground: 24 24% 11%;
     --destructive: 0 65% 51%;
     --destructive-foreground: 40 43% 91%;
-    --border: rgba(36, 28, 21, 0.12);
-    --input: rgba(36, 28, 21, 0.08);
+    --border: rgba(36, 28, 21, 0.14);
+    --input: rgba(36, 28, 21, 0.06);
     --ring: #c4703a;
-    --radius: 0.625rem;
+    --radius: 0.75rem;
   }
 
   .dark {
@@ -45,7 +45,7 @@
     --accent-foreground: 40 43% 91%;
     --destructive: 0 65% 51%;
     --destructive-foreground: 40 43% 91%;
-    --border: rgba(243, 236, 223, 0.12);
+    --border: rgba(243, 236, 223, 0.14);
     --input: rgba(243, 236, 223, 0.08);
     --ring: #c4703a;
   }
@@ -56,55 +56,38 @@ body {
   user-select: none;
   background-color: var(--background);
   color: var(--foreground);
-  letter-spacing: -0.005em;
-  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+h1, h2, h3, .font-display {
+  font-family: 'Newsreader', Georgia, 'Times New Roman', serif;
 }
 
 code, kbd, pre, .font-mono {
-  font-family: 'Roboto Mono', monospace;
+  font-family: 'Roboto Mono', ui-monospace, monospace;
 }
 
-/* Incarn Tactile Surfaces */
-.incarn-card {
-  background-color: var(--card);
-  border: 1px solid var(--border);
-  box-shadow: 0 1px 3px rgba(36, 28, 21, 0.05);
-}
-
-.incarn-modal {
-  background-color: var(--card);
-  border: 1px solid var(--border);
-  box-shadow: 0 24px 60px -15px rgba(0, 0, 0, 0.35), 0 0 0 1px var(--border);
-}
-
-.incarn-input {
-  background-color: var(--input);
-  border: 1px solid var(--border);
-  transition: all 0.15s ease-out;
-}
-.incarn-input:focus {
-  border-color: #c4703a;
-  outline: none;
-  box-shadow: 0 0 0 2px rgba(196, 112, 58, 0.25);
-}
-
-/* Diode pulse effect */
+/* Incarn Diode Pulse */
 .diode-pulse-green {
   animation: diode-pulse 2s ease-in-out infinite;
 }
 
-/* Custom subtle warm scrollbar */
+/* Warm Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(122, 98, 72, 0.2);
+  background: rgba(122, 98, 72, 0.25);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(122, 98, 72, 0.38);
+  background: rgba(122, 98, 72, 0.45);
 }

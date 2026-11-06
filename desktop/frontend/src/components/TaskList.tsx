@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Check, Calendar, Tag, Share2, Layers, Feather } from 'lucide-react';
+import { Plus, Check, Calendar, Tag, Share2, Layers, Sparkles } from 'lucide-react';
 import { Task, Project } from '../types';
 
 interface TaskListProps {
@@ -11,6 +11,8 @@ interface TaskListProps {
   currentProject: Project | null;
   onOpenShare: () => void;
   isViewer: boolean;
+  viewTitle: string;
+  selectedTag: string | null;
 }
 
 export const TaskList: React.FC<TaskListProps> = ({
@@ -22,15 +24,20 @@ export const TaskList: React.FC<TaskListProps> = ({
   currentProject,
   onOpenShare,
   isViewer,
+  viewTitle,
+  selectedTag,
 }) => {
   const [newTitle, setNewTitle] = useState('');
-  const [filter, setFilter] = useState<'all' | 'active' | 'completed'>('active');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'completed'>('active');
 
   const rootTasks = tasks.filter(t => !t.parentId);
 
   const filteredTasks = rootTasks.filter(t => {
-    if (filter === 'active') return !t.completed;
-    if (filter === 'completed') return t.completed;
+    if (selectedTag && (!t.tags || !t.tags.includes(selectedTag))) {
+      return false;
+    }
+    if (statusFilter === 'active') return !t.completed;
+    if (statusFilter === 'completed') return t.completed;
     return true;
   });
 
@@ -42,146 +49,188 @@ export const TaskList: React.FC<TaskListProps> = ({
     }
   };
 
+  const handleQuickAddSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newTitle.trim()) {
+      onAddTask(newTitle.trim());
+      setNewTitle('');
+    }
+  };
+
   return (
-    <div className="flex-1 flex flex-col h-full bg-paper dark:bg-ink border-r border-line dark:border-line-ink overflow-hidden select-none transition-colors">
-      {/* Header */}
-      <div className="px-6 py-4 border-b border-line dark:border-line-ink flex items-center justify-between shrink-0 bg-paper/80 dark:bg-ink/80 backdrop-blur">
-        <div>
-          <div className="flex items-center gap-2.5">
-            <h1 className="font-semibold text-base tracking-tight text-ink dark:text-paper">
-              {currentProject ? currentProject.name : 'All Tasks'}
-            </h1>
-            <span className="text-[11px] font-mono text-sepia px-2 py-0.5 rounded-full bg-paper-3/60 dark:bg-ink-2 border border-line dark:border-line-ink">
-              {filteredTasks.length}
-            </span>
+    <div className="flex-1 flex flex-col h-full bg-paper dark:bg-ink overflow-y-auto select-none transition-colors">
+      <div className="max-w-4xl mx-auto w-full p-6 sm:p-10 flex flex-col gap-8">
+        
+        {/* Editorial View Header */}
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-line dark:border-line-ink">
+          <div>
+            <div className="flex items-center gap-3">
+              <h1 className="font-display text-3xl sm:text-4xl font-medium tracking-tight text-ink dark:text-paper">
+                {currentProject ? currentProject.name : viewTitle}
+              </h1>
+              {selectedTag && (
+                <span className="text-xs font-mono px-2.5 py-1 rounded-full bg-ember/15 text-ember border border-ember/30 font-medium">
+                  #{selectedTag}
+                </span>
+              )}
+            </div>
+            <p className="font-sans text-sm text-sepia mt-1">
+              {filteredTasks.length} {filteredTasks.length === 1 ? 'recorded item' : 'recorded items'} in current perspective
+            </p>
           </div>
-          <p className="text-xs text-ink-soft dark:text-sepia mt-0.5 font-normal">
-            {filter === 'active' ? 'Pending items' : filter === 'completed' ? 'Completed archive' : 'All recorded items'}
-          </p>
-        </div>
 
-        <div className="flex items-center gap-3">
-          {currentProject && (
-            <button
-              onClick={onOpenShare}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-paper-2 dark:bg-ink-2 hover:bg-paper-3 dark:hover:bg-ink text-ink dark:text-paper border border-line dark:border-line-ink transition-all shadow-sm"
-            >
-              <Share2 className="w-3.5 h-3.5 text-ember" />
-              <span>Share</span>
-            </button>
-          )}
-
-          {/* Segmented Filter Control */}
-          <div className="flex items-center p-0.5 bg-paper-3/70 dark:bg-ink-3 rounded-lg border border-line dark:border-line-ink text-xs">
-            {(['active', 'completed', 'all'] as const).map(tab => (
+          <div className="flex items-center gap-3">
+            {currentProject && (
               <button
-                key={tab}
-                onClick={() => setFilter(tab)}
-                className={`px-3 py-1 rounded-md transition-all text-xs capitalize ${
-                  filter === tab
-                    ? 'bg-paper-2 dark:bg-ink-2 text-ink dark:text-paper font-medium shadow-sm border border-line dark:border-line-ink'
-                    : 'text-sepia hover:text-ink dark:hover:text-paper'
-                }`}
+                onClick={onOpenShare}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium bg-paper-2 dark:bg-ink-2 hover:bg-paper-3 dark:hover:bg-ink text-ink dark:text-paper border border-line dark:border-line-ink transition-all shadow-card hover:border-ember/40"
               >
-                {tab === 'completed' ? 'Done' : tab}
+                <Share2 className="w-3.5 h-3.5 text-ember" />
+                <span>Collaborators</span>
               </button>
-            ))}
+            )}
+
+            {/* Segmented Filter Pills */}
+            <div className="flex items-center p-1 bg-paper-2 dark:bg-ink-2 rounded-xl border border-line dark:border-line-ink shadow-sm">
+              {(['active', 'completed', 'all'] as const).map(tab => (
+                <button
+                  key={tab}
+                  onClick={() => setStatusFilter(tab)}
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all capitalize ${
+                    statusFilter === tab
+                      ? 'bg-paper dark:bg-ink-3 text-ink dark:text-paper shadow-sm border border-line dark:border-line-ink font-semibold'
+                      : 'text-sepia hover:text-ink dark:hover:text-paper'
+                  }`}
+                >
+                  {tab === 'completed' ? 'Done' : tab}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Quick Add Task Input */}
-      {!isViewer && (
-        <div className="px-6 py-3 border-b border-line dark:border-line-ink shrink-0 bg-paper-2/40 dark:bg-ink-2/30">
-          <div className="flex items-center gap-2.5 px-3.5 py-2 bg-paper-2 dark:bg-ink-2 rounded-lg border border-line dark:border-line-ink focus-within:border-ember focus-within:ring-2 focus-within:ring-ember/20 transition-all shadow-sm">
-            <Plus className="w-4 h-4 text-sepia shrink-0" />
+        {/* Quick Add Dropzone-Style Card */}
+        {!isViewer && (
+          <form
+            onSubmit={handleQuickAddSubmit}
+            className="p-3 sm:p-4 rounded-2xl bg-paper-2 dark:bg-ink-2 border border-line dark:border-line-ink shadow-card focus-within:border-ember focus-within:ring-2 focus-within:ring-ember/20 transition-all flex items-center gap-3"
+          >
+            <div className="w-8 h-8 rounded-xl bg-paper-3/80 dark:bg-ink/80 flex items-center justify-center text-ember shrink-0">
+              <Plus className="w-4 h-4 stroke-[2.5]" />
+            </div>
             <input
               type="text"
-              placeholder="Record a new task... (Press Enter to save)"
+              placeholder="Record a new task, requirement, or reflection... (Press Enter)"
               value={newTitle}
               onChange={e => setNewTitle(e.target.value)}
               onKeyDown={handleKeyDown}
-              className="w-full bg-transparent text-xs placeholder:text-sepia-soft outline-none text-ink dark:text-paper font-sans"
+              className="flex-1 bg-transparent text-sm placeholder:text-sepia outline-none text-ink dark:text-paper font-sans"
             />
-            <kbd className="text-[10px] font-mono text-sepia bg-paper-3/60 dark:bg-ink/60 px-1.5 py-0.5 rounded border border-line dark:border-line-ink">
-              ↵ Return
-            </kbd>
-          </div>
-        </div>
-      )}
-
-      {/* Task List Items */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-1">
-        {filteredTasks.map(task => {
-          const subtasks = tasks.filter(t => t.parentId === task.id);
-          const completedSubtasks = subtasks.filter(t => t.completed).length;
-          const isSelected = selectedTask?.id === task.id;
-
-          return (
-            <div
-              key={task.id}
-              onClick={() => onSelectTask(task)}
-              className={`group flex items-start gap-3 px-3.5 py-3 rounded-lg cursor-pointer transition-all border ${
-                isSelected
-                  ? 'bg-paper-2 dark:bg-ink-2 text-ink dark:text-paper border-line dark:border-line-ink border-l-4 !border-l-ember shadow-sm'
-                  : 'hover:bg-paper-2/60 dark:hover:bg-ink-2/40 text-ink dark:text-paper border-transparent'
+            <button
+              type="submit"
+              disabled={!newTitle.trim()}
+              className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all shrink-0 shadow-sm ${
+                newTitle.trim()
+                  ? 'bg-ember hover:bg-ember-deep text-paper shadow-ember/25 cursor-pointer'
+                  : 'bg-paper-3/60 dark:bg-ink-3 text-sepia/60 cursor-not-allowed border border-line dark:border-line-ink'
               }`}
             >
-              {/* Checkbox */}
-              <button
-                onClick={e => onToggleComplete(task, e)}
-                disabled={isViewer}
-                className={`mt-0.5 w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-all ${
-                  task.completed
-                    ? 'bg-sage border-sage text-paper shadow-sm'
-                    : 'border-sepia/40 hover:border-ember bg-paper-2 dark:bg-ink-2'
-                } ${isViewer ? 'opacity-40 cursor-not-allowed' : ''}`}
+              Add Task
+            </button>
+          </form>
+        )}
+
+        {/* Tasks Card Stream */}
+        <div className="space-y-3">
+          {filteredTasks.map(task => {
+            const subtasks = tasks.filter(t => t.parentId === task.id);
+            const completedSubtasks = subtasks.filter(t => t.completed).length;
+            const isSelected = selectedTask?.id === task.id;
+
+            return (
+              <div
+                key={task.id}
+                onClick={() => onSelectTask(task)}
+                className={`group flex items-start gap-4 p-4 sm:p-5 rounded-2xl cursor-pointer transition-all border ${
+                  isSelected
+                    ? 'bg-paper-2 dark:bg-ink-2 text-ink dark:text-paper border-line dark:border-line-ink border-l-[5px] !border-l-ember shadow-card-elevated'
+                    : 'bg-paper-2 dark:bg-ink-2 hover:bg-paper-3/70 dark:hover:bg-ink-2/80 text-ink dark:text-paper border-line dark:border-line-ink shadow-card hover:shadow-md'
+                }`}
               >
-                {task.completed && <Check className="w-3 h-3 stroke-[3]" />}
-              </button>
+                {/* Custom Incarn Checkbox */}
+                <button
+                  onClick={e => onToggleComplete(task, e)}
+                  disabled={isViewer}
+                  className={`mt-0.5 w-5 h-5 rounded-lg border flex items-center justify-center shrink-0 transition-all ${
+                    task.completed
+                      ? 'bg-sage border-sage text-paper shadow-sm'
+                      : 'border-sepia/40 hover:border-ember bg-paper dark:bg-ink'
+                  } ${isViewer ? 'opacity-40 cursor-not-allowed' : ''}`}
+                >
+                  {task.completed && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                </button>
 
-              {/* Task Content */}
-              <div className="flex-1 min-w-0">
-                <div className={`text-xs tracking-tight truncate ${task.completed ? 'line-through text-sepia' : 'text-ink dark:text-paper font-medium'}`}>
-                  {task.title}
-                </div>
+                {/* Task Body */}
+                <div className="flex-1 min-w-0">
+                  <div
+                    className={`text-sm sm:text-base tracking-tight leading-snug transition-all ${
+                      task.completed
+                        ? 'line-through text-sepia/80'
+                        : 'text-ink dark:text-paper font-medium'
+                    }`}
+                  >
+                    {task.title}
+                  </div>
 
-                {/* Metadata Chips */}
-                <div className="flex items-center gap-2 mt-1.5 text-[11px] text-sepia flex-wrap">
-                  {task.dueDate && (
-                    <span className="flex items-center gap-1 font-mono text-[10px] px-2 py-0.5 rounded bg-paper-3/50 dark:bg-ink-3 border border-line dark:border-line-ink text-sepia">
-                      <Calendar className="w-2.5 h-2.5 text-ember" />
-                      {task.dueDate}
-                    </span>
+                  {task.description && (
+                    <p className="text-xs text-ink-soft dark:text-paper-soft mt-1 line-clamp-2 leading-relaxed">
+                      {task.description}
+                    </p>
                   )}
 
-                  {subtasks.length > 0 && (
-                    <span className="flex items-center gap-1 font-mono text-[10px] px-2 py-0.5 rounded bg-paper-3/50 dark:bg-ink-3 border border-line dark:border-line-ink text-sepia">
-                      <Layers className="w-2.5 h-2.5 text-sepia" />
-                      {completedSubtasks}/{subtasks.length} subtasks
-                    </span>
-                  )}
+                  {/* Metadata Chips Bar */}
+                  <div className="flex items-center gap-2.5 mt-3 text-xs text-sepia flex-wrap">
+                    {task.dueDate && (
+                      <span className="flex items-center gap-1.5 font-mono text-xs px-2.5 py-0.5 rounded-full bg-paper-3/80 dark:bg-ink border border-line dark:border-line-ink text-sepia">
+                        <Calendar className="w-3 h-3 text-ember" />
+                        {task.dueDate}
+                      </span>
+                    )}
 
-                  {task.tags?.map(tag => (
-                    <span key={tag} className="flex items-center gap-1 text-[10px] text-sepia font-mono px-1.5 py-0.5 rounded bg-paper-3/40 dark:bg-ink-3 border border-line/50 dark:border-line-ink/50">
-                      <Tag className="w-2 h-2 text-ember" />
-                      #{tag}
-                    </span>
-                  ))}
+                    {subtasks.length > 0 && (
+                      <span className="flex items-center gap-1.5 font-mono text-xs px-2.5 py-0.5 rounded-full bg-paper-3/80 dark:bg-ink border border-line dark:border-line-ink text-sepia">
+                        <Layers className="w-3 h-3 text-sepia" />
+                        {completedSubtasks}/{subtasks.length} subtasks
+                      </span>
+                    )}
+
+                    {task.tags?.map(tag => (
+                      <span
+                        key={tag}
+                        className="inline-flex items-center gap-1 text-xs text-sepia font-mono px-2 py-0.5 rounded-full bg-paper-3/60 dark:bg-ink border border-line dark:border-line-ink"
+                      >
+                        <Tag className="w-2.5 h-2.5 text-ember" />
+                        #{tag}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
 
-        {filteredTasks.length === 0 && (
-          <div className="py-20 text-center text-xs text-sepia flex flex-col items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-paper-3/60 dark:bg-ink-2 flex items-center justify-center text-sepia">
-              <Feather className="w-5 h-5 text-ember" />
+          {filteredTasks.length === 0 && (
+            <div className="py-24 text-center text-sm text-sepia flex flex-col items-center gap-4 bg-paper-2/40 dark:bg-ink-2/30 rounded-3xl border border-dashed border-line dark:border-line-ink">
+              <div className="w-12 h-12 rounded-2xl bg-paper-2 dark:bg-ink-2 flex items-center justify-center text-ember border border-line dark:border-line-ink shadow-card">
+                <Sparkles className="w-6 h-6 text-ember" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="font-display text-xl text-ink dark:text-paper font-medium">Clear Canvas</h3>
+                <p className="text-xs text-sepia">No items found in this perspective. Record a new task to get started.</p>
+              </div>
             </div>
-            <span>No tasks recorded in this perspective</span>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );
