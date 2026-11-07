@@ -48,10 +48,10 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({
           <Layers className="w-7 h-7 text-ember" />
         </div>
         <h3 className="font-display text-2xl text-ink dark:text-paper font-medium mb-1">
-          Task Dossier
+          Task Details
         </h3>
         <p className="text-xs text-sepia leading-relaxed max-w-xs">
-          Select any task from the agenda to inspect its subtasks, tags, deadlines, and detailed notes.
+          Select any task from the list to view its subtasks, tags, deadlines, and notes.
         </p>
       </div>
     );
@@ -120,14 +120,11 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({
 
   return (
     <div className="w-96 lg:w-[420px] border-l border-line dark:border-line-ink bg-paper-2 dark:bg-ink-2 flex flex-col h-full overflow-hidden shrink-0 select-none text-ink dark:text-paper font-sans transition-colors shadow-2xl">
-      {/* Dossier Header */}
+      {/* Details Header */}
       <div className="px-6 py-5 border-b border-line dark:border-line-ink flex items-center justify-between shrink-0 bg-paper-2/90 dark:bg-ink-2/90 backdrop-blur">
         <div className="flex items-center gap-3">
           <span className="font-display text-xl font-medium tracking-tight text-ink dark:text-paper">
-            {isSubtask ? 'Child Subtask' : 'Task Dossier'}
-          </span>
-          <span className="text-xs font-mono text-sepia px-2 py-0.5 rounded-full bg-paper-3/80 dark:bg-ink border border-line dark:border-line-ink">
-            v{task.version}
+            {isSubtask ? 'Child Subtask' : 'Task Details'}
           </span>
         </div>
         <button
