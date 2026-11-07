@@ -207,10 +207,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
         )}
       </div>
 
-      {/* Quote / Editorial Brand Footer */}
-      <div className="p-4 border-t border-line dark:border-line-ink bg-paper-2/40 dark:bg-ink-3">
-        <p className="font-display italic text-xs text-sepia text-center leading-relaxed">
-          &ldquo;Memory is the architecture of identity, crafted line by line.&rdquo;
+      {/* Footer */}
+      <div className="p-3 border-t border-line dark:border-line-ink bg-paper-2/40 dark:bg-ink-3">
+        <p className="text-[11px] font-mono text-sepia text-center">
+          Cloud Todo Desktop
         </p>
       </div>
     </aside>

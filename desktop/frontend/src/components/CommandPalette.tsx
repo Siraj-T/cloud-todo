@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Search, Plus, Moon, Sun, CheckCircle2, Folder, Laptop, Feather } from 'lucide-react';
+import { Search, Plus, Moon, Sun, CheckCircle2, Folder, Laptop, X } from 'lucide-react';
 import { Task, Project } from '../types';
 
 interface CommandPaletteProps {
@@ -64,9 +64,13 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
             onChange={e => setQuery(e.target.value)}
             className="w-full bg-transparent text-sm placeholder:text-sepia outline-none text-ink dark:text-paper font-medium"
           />
-          <kbd className="px-2 py-0.5 text-[10px] font-mono text-sepia bg-paper-3/70 dark:bg-ink rounded-md border border-line dark:border-line-ink">
-            ESC
-          </kbd>
+          <button
+            onClick={onClose}
+            title="Close"
+            className="p-1 rounded-lg hover:bg-paper-3 dark:hover:bg-ink text-sepia hover:text-ink dark:hover:text-paper transition-colors shrink-0 ml-2"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
 
         {/* Action List */}
@@ -105,7 +109,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
             ) : (
               <Moon className="w-4 h-4 mr-3 text-sepia group-hover:text-ember" />
             )}
-            <span>Switch to {isDark ? 'Incarn Parchment (Light)' : 'Incarn Darkroom (Dark)'}</span>
+            <span>Switch to {isDark ? 'Light Theme' : 'Dark Theme'}</span>
           </button>
 
           {/* Jump to Project */}
@@ -158,10 +162,6 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
             <span>↑↓ Navigate</span>
             <span>↵ Select</span>
             <span>ESC Dismiss</span>
-          </div>
-          <div className="flex items-center gap-1.5 text-ember">
-            <Feather className="w-3.5 h-3.5" />
-            <span>Incarn Theme</span>
           </div>
         </div>
       </div>

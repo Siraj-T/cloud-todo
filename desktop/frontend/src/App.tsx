@@ -7,7 +7,7 @@ import { ShareModal } from './components/ShareModal';
 import { DevicesModal } from './components/DevicesModal';
 import { ConflictModal } from './components/ConflictModal';
 import { Task, Project, SyncState, DeviceSession } from './types';
-import { Search, Sun, Moon, Laptop, RefreshCw, CloudOff, AlertTriangle } from 'lucide-react';
+import { Search, Sun, Moon, Laptop, CheckSquare } from 'lucide-react';
 
 const initialTasks: Task[] = [
   {
@@ -101,11 +101,14 @@ export const App: React.FC = () => {
   const [conflictModalData, setConflictModalData] = useState<{ local: Task; cloud: Task } | null>(null);
 
   // Sync state
-  const [syncState, setSyncState] = useState<SyncState>('SYNCED');
-  const [pendingCount, setPendingCount] = useState(0);
+  const [, setSyncState] = useState<SyncState>('SYNCED');
+  const [, setPendingCount] = useState(0);
 
-  // Default to Incarn Parchment (Light) Theme!
-  const [isDark, setIsDark] = useState(false);
+  // Theme with localStorage persistence
+  const [isDark, setIsDark] = useState<boolean>(() => {
+    const saved = localStorage.getItem('theme');
+    return saved ? saved === 'dark' : false;
+  });
 
   // Active devices
   const [devices, setDevices] = useState<DeviceSession[]>([
@@ -116,8 +119,10 @@ export const App: React.FC = () => {
   useEffect(() => {
     if (isDark) {
       document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
     } else {
       document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
     }
   }, [isDark]);
 
@@ -293,18 +298,16 @@ export const App: React.FC = () => {
       <header className="h-16 px-6 border-b border-line dark:border-line-ink bg-paper/90 dark:bg-ink/90 backdrop-blur-md flex items-center justify-between shrink-0 z-30 transition-colors">
         
         {/* Brand & Logo */}
-        <div className="flex items-center gap-3.5">
-          <div className="w-8 h-8 rounded-full bg-ember/15 border border-ember/30 flex items-center justify-center text-ember shadow-sm">
-            <svg className="h-5 w-auto" viewBox="0 0 88 116" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <ellipse cx="44" cy="14" rx="8.5" ry="7.5" stroke="currentColor" stroke-width="4" />
-              <line x1="44" y1="21" x2="44" y2="26" stroke="currentColor" stroke-width="4" />
-              <ellipse cx="44" cy="68" rx="36" ry="44" stroke="currentColor" stroke-width="5" />
-              <ellipse cx="44" cy="68" rx="27" ry="34" stroke="currentColor" stroke-width="2" fill="rgba(196,112,58,0.2)" />
-            </svg>
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-ember/15 border border-ember/30 flex items-center justify-center text-ember shadow-sm">
+            <CheckSquare className="w-5 h-5" />
           </div>
-          <div>
-            <span className="font-display italic text-2xl font-medium tracking-tight text-ink dark:text-paper leading-none">
-              Incarn Todo
+          <div className="flex flex-col">
+            <span className="font-display text-xl font-semibold tracking-tight text-ink dark:text-paper leading-none">
+              TodoApp
+            </span>
+            <span className="text-[11px] font-mono text-sepia tracking-wide">
+              Offline-First Tasks
             </span>
           </div>
         </div>
@@ -325,36 +328,6 @@ export const App: React.FC = () => {
 
         {/* Right Status Controls */}
         <div className="flex items-center gap-3">
-          
-          {/* Live Optical Diode Status Badge */}
-          {syncState === 'SYNCED' && (
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium bg-sage/10 text-sage dark:text-sage-soft border border-sage/25">
-              <span className="w-2 h-2 rounded-full bg-sage diode-pulse-green shrink-0"></span>
-              <span className="hidden sm:inline">Database Synced</span>
-            </div>
-          )}
-
-          {syncState === 'PENDING' && (
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium bg-ember/15 text-ember border border-ember/30">
-              <RefreshCw className="w-3 h-3 animate-spin text-ember shrink-0" />
-              <span>{pendingCount} pending</span>
-            </div>
-          )}
-
-          {syncState === 'OFFLINE' && (
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium bg-sepia/15 text-sepia border border-sepia/30">
-              <CloudOff className="w-3 h-3 shrink-0" />
-              <span>Offline Mode</span>
-            </div>
-          )}
-
-          {syncState === 'CONFLICT' && (
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30">
-              <AlertTriangle className="w-3 h-3 shrink-0" />
-              <span>Conflict</span>
-            </div>
-          )}
-
           {/* Signed-in Devices Trigger */}
           <button
             onClick={() => setIsDevicesOpen(true)}
@@ -367,7 +340,7 @@ export const App: React.FC = () => {
           {/* Light / Dark Mode Toggle */}
           <button
             onClick={() => setIsDark(!isDark)}
-            title={isDark ? 'Switch to Incarn Parchment (Light)' : 'Switch to Incarn Darkroom (Dark)'}
+            title={isDark ? 'Switch to Light Theme' : 'Switch to Dark Theme'}
             className="p-2 rounded-full bg-paper-2 dark:bg-ink-2 hover:bg-paper-3 dark:hover:bg-ink border border-line dark:border-line-ink text-ember transition-all shadow-sm"
           >
             {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
