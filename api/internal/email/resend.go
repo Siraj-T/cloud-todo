@@ -88,6 +88,7 @@ func (s *ResendSender) SendInvitation(ctx context.Context, toEmail, projectName,
 
 	req.Header.Set("Authorization", "Bearer "+s.apiKey)
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User-Agent", "Cloud-Todo/1.0")
 
 	resp, err := s.httpClient.Do(req)
 	if err != nil {

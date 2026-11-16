@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -14,7 +15,34 @@ import (
 	"github.com/Siraj-T/cloud-todo/api/internal/storage"
 )
 
+func loadEnv() {
+	candidates := []string{".env", "api/.env", "../.env"}
+	for _, path := range candidates {
+		data, err := os.ReadFile(path)
+		if err == nil {
+			lines := strings.Split(string(data), "\n")
+			for _, line := range lines {
+				line = strings.TrimSpace(line)
+				if line == "" || strings.HasPrefix(line, "#") {
+					continue
+				}
+				parts := strings.SplitN(line, "=", 2)
+				if len(parts) == 2 {
+					k := strings.TrimSpace(parts[0])
+					v := strings.Trim(strings.TrimSpace(parts[1]), `"'`)
+					if os.Getenv(k) == "" {
+						_ = os.Setenv(k, v)
+					}
+				}
+			}
+			break
+		}
+	}
+}
+
 func main() {
+	loadEnv()
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
