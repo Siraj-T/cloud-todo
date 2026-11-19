@@ -68,6 +68,13 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) routes() {
 	s.router.GET("/healthz", s.handleHealthz)
+	s.router.GET("/", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"service":    "Cloud Todo Sync API",
+			"status":     "healthy",
+			"desktop_ui": "http://localhost:3456",
+		})
+	})
 
 	// Session enrollment (unauthenticated)
 	s.router.POST("/sessions/enroll", s.handleEnrollSession)
