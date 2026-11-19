@@ -1,74 +1,105 @@
-# Cloud Todo (`cloud-todo`)
+# Cloud Todo
 
-An offline-first desktop todo application engineered with **Go**, **React 19**, **TypeScript**, **Wails**, **SQLite**, and **Firebase/Firestore**.
+Cloud Todo is an offline-first, multi-user task management application built with **Go**, **React 19**, **TypeScript**, **SQLite**, and **Gin**. 
 
-Designed with a sleek Linear/Raycast aesthetic, robust offline durability, optimistic outbox sync, explicit conflict resolution, role-based project sharing, per-device revocation, and native desktop notifications.
+It is designed so you can create, edit, organize, and manage personal tasks on your computer completely offline with zero latency, while seamlessly synchronizing shared projects, sending email invitations, and collaborating with team members whenever you are connected to the internet.
 
 ---
 
-## Architecture Overview
+## Key Features
 
+* **Offline-First Speed & Durability**: All task operations write directly to an embedded local SQLite database (`~/.cloudtodo/todo.db`) using atomic transactions in `<1ms`. If your internet drops, the app never crashes or freezes—changes safely accumulate in an outbox queue and sync automatically when connectivity returns.
+* **Task Organization & 1-Level Subtasks**:
+  * Global standalone tasks (kept strictly private to your machine).
+  * Project-based tasks with single-level subtasks (prevents confusing infinite nesting).
+  * Calendar due dates (`YYYY-MM-DD` stored without timezone distortion).
+  * Case-insensitive, deduplicated tags.
+  * Cascade deletion with confirmation modals displaying affected child task counts.
+* **Google Authentication**:
+  * Connected via Firebase Auth using a secure popup flow (`signInWithPopup`).
+  * Completes Google OAuth in a popup window without disruptive page redirects, keeping your local offline task queue completely safe.
+  * Reactively reflects user identity, Google profile photo, and display name.
+* **Cloud Sync & Conflict Resolution (OCC)**:
+  * Automated 15-second bidirectional sync loop between desktop clients and the Gin Cloud API.
+  * Optimistic Concurrency Control (OCC) detects concurrent edits on the same task.
+  * Side-by-side visual conflict diff modal lets you choose between *"Review Local Version"* or *"Use Cloud Version"* without losing work.
+* **Project Sharing & Role-Based Access (RBAC)**:
+  * **Owner**: Full project management, invite members, and delete project.
+  * **Editor**: Create, edit, complete, and delete project tasks.
+  * **Viewer**: Strictly read-only access.
+* **Transactional Email Invitations**:
+  * Powered by the **Resend** REST API to dispatch branded HTML project invitations.
+  * Includes a zero-dependency environment loader (`loadEnv()`) that automatically reads `api/.env`.
+  * Includes `User-Agent: Cloud-Todo/1.0` header to pass Cloudflare edge bot protection.
+  * Falls back to **Simulation Mode** in local development if no API key is configured, logging invitation links directly to the console.
+* **Per-Device Session Revocation**:
+  * Each physical machine receives a unique 32-byte opaque device session token, stored as a SHA-256 cryptographic hash on the server.
+  * Revoking a specific laptop immediately blocks its cloud access with `401 Unauthorized` without logging out other devices.
+* **Native Desktop Notifications**:
+  * Native Windows Action Center toast notifications with audio alerts for due-date reminders and real-time collaborator updates via Server-Sent Events (SSE).
+* **Modern Interface**:
+  * Built with React 19, TypeScript, and Tailwind CSS.
+  * Elegant typography hierarchy combining warm **Newsreader** serif headings with legible **Roboto** body text.
+  * Dark and Light theme toggle with automatic `localStorage` persistence.
+  * `Ctrl+K` keyboard-driven Command Palette with quick navigation and search.
+
+---
+
+## Architecture & Project Structure
+
+The project is cleanly split into two components:
+
+```text
+todoappproject/
+├── desktop/                    # Desktop Client (Runs locally)
+│   ├── app.go                  # Bridge coordinating UI actions with SQLite & Sync
+│   ├── main.go                 # Local server (:3456) serving embedded React UI
+│   ├── internal/
+│   │   ├── domain/             # Business rules, validation & subtask hierarchy
+│   │   ├── notify/             # Windows Action Center toast notification engine
+│   │   ├── store/              # SQLite persistence (WAL mode, transactions, outbox)
+│   │   └── sync/               # 15-second background sync engine & HTTP client
+│   └── frontend/               # React 19 + TypeScript + Tailwind CSS UI
+│
+├── api/                        # Cloud Sync API Server (Gin Web Framework)
+│   ├── cmd/server/main.go      # Server entry point & zero-dependency .env loader
+│   ├── internal/
+│   │   ├── email/              # Resend REST API integration & simulation fallback
+│   │   ├── server/             # Gin router, requireAuth middleware & route handlers
+│   │   └── storage/            # Cloud vault storage & SHA-256 token hash manager
+│   ├── .env                    # Secret API keys (ignored by git)
+│   └── Dockerfile              # Multi-stage container build (<25MB Alpine image)
+│
+└── firestore.rules             # Unbreakable vault rule (blocks direct client access)
 ```
-┌────────────────────────────────────────────────────────┐
-│               Desktop App (Wails + React)              │
-│  ┌───────────────────────┐   ┌───────────────────────┐ │
-│  │   React 19 + TS UI    │   │  Go Core & Services   │ │
-│  │  Tailwind + Radix UI  │◄─►│ SQLite / Outbox Queue │ │
-│  │  Linear/Raycast Theme │   │ Native Windows Toast  │ │
-│  └───────────────────────┘   └───────────┬───────────┘ │
-└──────────────────────────────────────────┼─────────────┘
-                                           │ HTTPS REST API
-                                           ▼
-┌────────────────────────────────────────────────────────┐
-│                   Go Cloud Sync API                    │
-│  ┌──────────────────────────────────────────────────┐  │
-│  │  Auth & Device Session Middleware (Hashed Token) │  │
-│  │  Mutation Engine & Version Conflict Detector     │  │
-│  │  Project RBAC (Owner / Editor / Viewer)          │  │
-│  │  Feed Fanout & Real-time Event Broadcaster       │  │
-│  └──────────────────────────┬───────────────────────┘  │
-└─────────────────────────────┼──────────────────────────┘
-                              │ Firebase Admin SDK
-                              ▼
-┌────────────────────────────────────────────────────────┐
-│              Firebase Cloud Infrastructure             │
-│   • Firebase Authentication (Email/Password, Google)   │
-│   • Cloud Firestore (Deny-all client rules)            │
-│   • Firebase Cloud Messaging (FCM / Push Engine)       │
-└────────────────────────────────────────────────────────┘
+
+---
+
+## How to Run
+
+### Quick Start (Desktop Only - Works 100% Offline)
+To run the full app locally with the embedded database and UI:
+```bash
+cd desktop
+go run .
 ```
-
-## Features
-
-- **Offline-First Durability**: Full offline CRUD functionality. Writes are committed atomically with outbox mutation records in local SQLite transactions.
-- **Hierarchical Tasks**: Root tasks and 1-level subtasks with independent completion status. Subtasks inherit project/personal scope.
-- **Explicit Conflict Resolution**: Optimistic versioning detects concurrent edits. Side-by-side diffing lets users inspect remote changes vs local drafts without losing work.
-- **Project Collaboration & RBAC**:
-  - **Owner**: Manage members, invite via secure token, delete projects.
-  - **Editor**: Create, edit, complete, reopen, and delete project tasks.
-  - **Viewer**: Read-only view with mutation controls hidden.
-- **Per-Device Session Revocation**: Granularly list and revoke specific device sessions without invalidating other devices or wiping local offline data.
-- **Desktop & Push Notifications**:
-  - Native Windows desktop notifications for shared project activities (invitations, task updates, sync conflicts).
-  - Local due-date reminder alerts.
-- **Modern UI / UX**:
-  - Linear/Raycast-inspired dark and light themes.
-  - Keyboard-driven workflows (`Ctrl+K` command palette, `Esc` navigation).
-  - Clear, non-color-dependent sync status badges (`Local only`, `Offline`, `Pending`, `Synced`, `Conflict`).
+Then open your browser to: **`http://localhost:3456`**
 
 ---
 
-## Tech Stack
+### Running with Cloud Sync & Email Service
+To test multi-device cloud synchronization and transactional email delivery, start both services:
 
-- **Desktop Framework**: Wails + Go
-- **Frontend**: React 19, TypeScript, Tailwind CSS, Radix UI, Lucide Icons, Vite
-- **Local Persistence**: Pure-Go SQLite (`modernc.org/sqlite`, zero CGO dependency)
-- **Cloud Backend**: Go HTTP service (`net/http`, chi/mux) with Firebase Admin SDK
-- **Cloud Persistence**: Firebase Authentication + Cloud Firestore
+1. **Start the Cloud Sync API** (Terminal 1):
+   ```bash
+   cd api
+   go run ./cmd/server
+   ```
+   *Runs on `http://localhost:8080`.*
 
----
-
-## License
-
-MIT © [Siraj-T](https://github.com/Siraj-T)
-
+2. **Start the Desktop App** (Terminal 2):
+   ```bash
+   cd desktop
+   go run .
+   ```
+   *Runs on `http://localhost:3456`.*
