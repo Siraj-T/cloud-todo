@@ -77,29 +77,25 @@ todoappproject/
 
 ## How to Run
 
-### Quick Start (Desktop Only - Works 100% Offline)
-To run the full app locally with the embedded database and UI:
-```bash
-cd desktop
-go run .
-```
-Then open your browser to: **`http://localhost:3456`**
+### 1-Click Native Desktop App (Recommended)
+Simply double-click **`Cloud-Todo.exe`**:
+* Opens a dedicated native application window (no browser tabs or address bar).
+* Automatically checks and boots the Cloud Sync API (`cloud-todo-api.exe`) in the background if it is not already running.
+* Automatically terminates background workers cleanly when the desktop window is closed.
 
 ---
 
-### Running with Cloud Sync & Email Service
-To test multi-device cloud synchronization and transactional email delivery, start both services:
+### Running from Source / Terminal
+If you prefer running directly from terminal:
 
-1. **Start the Cloud Sync API** (Terminal 1):
-   ```bash
-   cd api
-   go run ./cmd/server
-   ```
-   *Runs on `http://localhost:8080`.*
+```bash
+# Start Desktop App (auto-boots API if offline)
+cd desktop
+go run .
+```
 
-2. **Start the Desktop App** (Terminal 2):
-   ```bash
-   cd desktop
-   go run .
-   ```
-   *Runs on `http://localhost:3456`.*
+*To run the Cloud API manually in its own terminal to observe live sync and Resend email logs:*
+```bash
+cd api
+go run ./cmd/server
+```
