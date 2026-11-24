@@ -20,6 +20,50 @@ import (
 //go:embed frontend/dist/*
 var assets embed.FS
 
+// startAPIServerIfOffline checks if the sync server on http://localhost:8080 is reachable.
+// If not, it automatically boots cloud-todo-api.exe in the background and returns the process
+// so it can be terminated when the desktop window is closed.
+func startAPIServerIfOffline() *exec.Cmd {
+	client := http.Client{Timeout: 600 * time.Millisecond}
+	resp, err := client.Get("http://localhost:8080/healthz")
+	if err == nil && resp.StatusCode == http.StatusOK {
+		resp.Body.Close()
+		return nil // Already running
+	}
+
+	exePath, _ := os.Executable()
+	exeDir := filepath.Dir(exePath)
+
+	candidates := []string{
+		filepath.Join(exeDir, "cloud-todo-api.exe"),
+		filepath.Join(exeDir, "api", "cloud-todo-api.exe"),
+		`c:\Users\darkn\Desktop\todoapp\todoappproject\api\cloud-todo-api.exe`,
+		`C:\Users\darkn\Desktop\cloud-todo-api.exe`,
+		`..\api\cloud-todo-api.exe`,
+		"cloud-todo-api.exe",
+	}
+
+	for _, binPath := range candidates {
+		if _, err := os.Stat(binPath); err == nil {
+			cmd := exec.Command(binPath)
+			cmd.Dir = filepath.Dir(binPath)
+			if err := cmd.Start(); err == nil {
+				log.Printf("Automatically booted Cloud Sync API from: %s", binPath)
+				for i := 0; i < 15; i++ {
+					time.Sleep(100 * time.Millisecond)
+					r, err := client.Get("http://localhost:8080/healthz")
+					if err == nil && r.StatusCode == http.StatusOK {
+						r.Body.Close()
+						break
+					}
+				}
+				return cmd
+			}
+		}
+	}
+	return nil
+}
+
 // launchDesktopWindow opens a dedicated native desktop window (Application Mode)
 // with no browser address bar, no tabs, and an isolated desktop profile.
 func launchDesktopWindow(targetURL string, appDir string) {
@@ -56,6 +100,16 @@ func launchDesktopWindow(targetURL string, appDir string) {
 }
 
 func main() {
+	// 0. Automatically ensure Cloud Sync API is running in the background
+	apiCmd := startAPIServerIfOffline()
+	if apiCmd != nil {
+		defer func() {
+			if apiCmd.Process != nil {
+				_ = apiCmd.Process.Kill()
+			}
+		}()
+	}
+
 	userHome, err := os.UserHomeDir()
 	if err != nil {
 		userHome = "."
