@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/fs"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/exec"
@@ -162,8 +163,14 @@ func main() {
 		Handler: mux,
 	}
 
+	// Bind the TCP listener synchronously so the port is guaranteed ready before launching the window
+	ln, err := net.Listen("tcp", ":"+port)
+	if err != nil {
+		log.Fatalf("Failed to bind port %s: %v", port, err)
+	}
+
 	go func() {
-		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		if err := server.Serve(ln); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Desktop server stopped: %v", err)
 		}
 	}()
@@ -174,10 +181,20 @@ func main() {
 	fmt.Printf(" Sync API Target: %s\n", apiURL)
 	fmt.Printf("====================================================\n")
 
-	time.Sleep(150 * time.Millisecond)
+	// Wait until the local HTTP server responds 200 OK before opening Edge
+	localURL := fmt.Sprintf("http://localhost:%s", port)
+	readyClient := http.Client{Timeout: 300 * time.Millisecond}
+	for i := 0; i < 20; i++ {
+		resp, err := readyClient.Get(localURL)
+		if err == nil {
+			resp.Body.Close()
+			break
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
 
 	// Launch native desktop window (Application Mode)
-	launchDesktopWindow(fmt.Sprintf("http://localhost:%s", port), appDir)
+	launchDesktopWindow(localURL, appDir)
 
 	// Graceful shutdown when desktop window closes
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
