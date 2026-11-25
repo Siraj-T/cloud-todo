@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Send, Copy, Check, Users, Link } from 'lucide-react';
+import { X, Send, Copy, Check, Users, Link, Trash2 } from 'lucide-react';
 import { Project } from '../types';
 
 interface Member {
@@ -14,6 +14,7 @@ interface ShareModalProps {
   ownerEmail: string;
   onClose: () => void;
   onSendInvite: (email: string, role: string) => Promise<string>;
+  onRemoveMember?: (email: string) => Promise<void>;
 }
 
 export const ShareModal: React.FC<ShareModalProps> = ({
@@ -22,6 +23,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
   ownerEmail,
   onClose,
   onSendInvite,
+  onRemoveMember,
 }) => {
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<'editor' | 'viewer'>('editor');
@@ -71,6 +73,17 @@ export const ShareModal: React.FC<ShareModalProps> = ({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
+  };
+
+  const handleRemove = async (member: Member) => {
+    if (!project || member.role === 'owner') return;
+    if (!confirm(`Remove ${member.email} from "${project.name}"?`)) return;
+    if (onRemoveMember) {
+      await onRemoveMember(member.email);
+    }
+    const updated = members.filter(m => m.email !== member.email);
+    setMembers(updated);
+    localStorage.setItem(`cloudtodo_members_${project.id}`, JSON.stringify(updated));
   };
 
   return (
@@ -162,17 +175,29 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                   </div>
                   <span className="truncate text-xs font-medium text-ink dark:text-paper">{member.email}</span>
                 </div>
-                <span
-                  className={`text-[10px] font-mono px-2 py-0.5 rounded uppercase font-medium ${
-                    member.role === 'owner'
-                      ? 'bg-gold/15 text-gold border border-gold/25'
-                      : member.role === 'editor'
-                      ? 'bg-ember/15 text-ember border border-ember/25'
-                      : 'bg-sepia/15 text-sepia-soft border border-sepia/20'
-                  }`}
-                >
-                  {member.role}
-                </span>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span
+                    className={`text-[10px] font-mono px-2 py-0.5 rounded uppercase font-medium ${
+                      member.role === 'owner'
+                        ? 'bg-gold/15 text-gold border border-gold/25'
+                        : member.role === 'editor'
+                        ? 'bg-ember/15 text-ember border border-ember/25'
+                        : 'bg-sepia/15 text-sepia-soft border border-sepia/20'
+                    }`}
+                  >
+                    {member.role}
+                  </span>
+                  {project.role === 'owner' && member.role !== 'owner' && (
+                    <button
+                      type="button"
+                      onClick={() => handleRemove(member)}
+                      title={`Remove ${member.email}`}
+                      className="p-1 rounded-md text-sepia hover:text-rose-500 hover:bg-rose-500/10 transition-colors"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
               </div>
             ))}
           </div>

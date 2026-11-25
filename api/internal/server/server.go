@@ -103,6 +103,7 @@ func (s *Server) routes() {
 
 		auth.POST("/projects", s.handleCreateProject)
 		auth.POST("/projects/:id/invitations", s.handleCreateInvitation)
+		auth.POST("/projects/:id/members/remove", s.handleRemoveMember)
 		auth.POST("/invitations/:token/accept", s.handleAcceptInvitation)
 	}
 }
@@ -140,6 +141,10 @@ func (s *Server) requireAuth() gin.HandlerFunc {
 			EmailVerified: c.GetHeader("X-Email-Verified") == "true",
 			SessionID:     session.SessionID,
 			DeviceName:    session.DeviceName,
+		}
+
+		if userCtx.Email != "" {
+			s.storage.SetUserEmail(c.Request.Context(), userCtx.UID, userCtx.Email)
 		}
 
 		c.Set(userContextKey, userCtx)
@@ -380,6 +385,38 @@ func (s *Server) handleCreateProject(c *gin.Context) {
 	}
 	_ = s.storage.SetMembership(c.Request.Context(), req.ID, u.UID, "owner")
 	c.JSON(http.StatusOK, gin.H{"id": req.ID, "name": req.Name, "role": "owner"})
+}
+
+// POST /projects/:id/members/remove
+func (s *Server) handleRemoveMember(c *gin.Context) {
+	u := getUserContext(c)
+	projectID := c.Param("id")
+	role, err := s.storage.GetMembership(c.Request.Context(), projectID, u.UID)
+	if err != nil || role != "owner" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "only project owners can remove members"})
+		return
+	}
+
+	var req struct {
+		UID   string `json:"uid"`
+		Email string `json:"email"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil || (req.UID == "" && req.Email == "") {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "missing member uid or email"})
+		return
+	}
+	if req.UID == u.UID || (req.Email != "" && strings.EqualFold(req.Email, u.Email)) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "project owner cannot remove themselves"})
+		return
+	}
+
+	if req.UID != "" {
+		_ = s.storage.RemoveMembership(c.Request.Context(), projectID, req.UID)
+	}
+	if req.Email != "" {
+		_ = s.storage.RemoveMemberByEmail(c.Request.Context(), projectID, req.Email)
+	}
+	c.JSON(http.StatusOK, gin.H{"status": "removed"})
 }
 
 // POST /projects/:id/invitations

@@ -508,6 +508,17 @@ export const App: React.FC = () => {
     }
   };
 
+  const handleRemoveMember = async (email: string) => {
+    if (!currentProject || !currentUser) return;
+    const token = deviceToken || (await enrollWithAPI(currentUser));
+    if (!token) return;
+    await fetch(`${API_BASE}/projects/${currentProject.id}/members/remove`, {
+      method: 'POST',
+      headers: buildHeaders(token, currentUser),
+      body: JSON.stringify({ email }),
+    }).catch(() => {});
+  };
+
   const handleRevokeDevice = async (sessionId: string) => {
     setDevices(devices.filter(d => d.sessionId !== sessionId));
   };
@@ -735,6 +746,7 @@ export const App: React.FC = () => {
         ownerEmail={currentUser.email || currentUser.displayName || currentUser.uid}
         onClose={() => setIsShareOpen(false)}
         onSendInvite={handleSendInvite}
+        onRemoveMember={handleRemoveMember}
       />
 
       {/* Devices Modal */}

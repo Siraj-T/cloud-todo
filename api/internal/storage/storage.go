@@ -40,6 +40,8 @@ type Storage interface {
 	GetMembership(ctx context.Context, projectID, uid string) (string, error)
 	SetMembership(ctx context.Context, projectID, uid, role string) error
 	RemoveMembership(ctx context.Context, projectID, uid string) error
+	SetUserEmail(ctx context.Context, uid, email string)
+	RemoveMemberByEmail(ctx context.Context, projectID, email string) error
 }
 
 // MemoryStorage implements Storage in-memory with thread safety.
@@ -52,6 +54,7 @@ type MemoryStorage struct {
 	taskOwners   map[string]string
 	taskProjects map[string]string
 	memberships  map[string]string          // "projectID:uid" -> role
+	userEmails   map[string]string          // uid -> normalized email
 	invitations  map[string]*models.Invitation // tokenHash -> invitation
 	userFeeds    map[string][]models.FeedChange // uid -> changes
 	feedSequence int64
@@ -67,6 +70,7 @@ func NewMemoryStorage() *MemoryStorage {
 		taskOwners:   make(map[string]string),
 		taskProjects: make(map[string]string),
 		memberships:  make(map[string]string),
+		userEmails:   make(map[string]string),
 		invitations:  make(map[string]*models.Invitation),
 		userFeeds:    make(map[string][]models.FeedChange),
 	}
@@ -180,6 +184,33 @@ func (m *MemoryStorage) RemoveMembership(ctx context.Context, projectID, uid str
 
 	key := fmt.Sprintf("%s:%s", projectID, uid)
 	delete(m.memberships, key)
+	return nil
+}
+
+func (m *MemoryStorage) SetUserEmail(ctx context.Context, uid, email string) {
+	if uid == "" || email == "" {
+		return
+	}
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.userEmails[uid] = strings.ToLower(strings.TrimSpace(email))
+}
+
+func (m *MemoryStorage) RemoveMemberByEmail(ctx context.Context, projectID, email string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	norm := strings.ToLower(strings.TrimSpace(email))
+	for uid, uEmail := range m.userEmails {
+		if uEmail == norm {
+			delete(m.memberships, fmt.Sprintf("%s:%s", projectID, uid))
+		}
+	}
+	for _, inv := range m.invitations {
+		if inv.ProjectID == projectID && inv.NormalizedEmail == norm && inv.Status == "PENDING" {
+			inv.Status = "CANCELLED"
+		}
+	}
 	return nil
 }
 
