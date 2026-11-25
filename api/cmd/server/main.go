@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strings"
 	"syscall"
 	"time"
@@ -48,9 +49,14 @@ func main() {
 		port = "8080"
 	}
 
-	// Memory storage is used for local standalone development.
+	// Persistent JSON-backed storage for local standalone deployment.
 	// In production with Firestore, a FirestoreStorage adapter implements the Storage interface.
-	store := storage.NewMemoryStorage()
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		homeDir = "."
+	}
+	statePath := filepath.Join(homeDir, ".cloudtodo", "cloud-api-state.json")
+	store := storage.NewPersistentMemoryStorage(statePath)
 	srv := server.NewServer(store)
 
 	httpServer := &http.Server{

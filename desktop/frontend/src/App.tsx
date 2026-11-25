@@ -121,6 +121,27 @@ export const App: React.FC = () => {
       if (data.nextCursor) {
         localStorage.setItem(`cloudtodo_cursor_${user.uid}`, String(data.nextCursor));
       }
+
+      // Sync active project memberships (removes projects if user was removed by owner)
+      const projRes = await fetch(`${API_BASE}/projects`, {
+        headers: buildHeaders(token, user),
+      });
+      if (projRes.ok) {
+        const projData = await projRes.json();
+        const serverProjects = (projData.projects || []) as Array<{ id: string; name: string; role: string }>;
+        const serverIds = new Set(serverProjects.map(sp => sp.id));
+        const localProjs: Project[] = JSON.parse(localStorage.getItem(`cloudtodo_projects_${user.uid}`) || '[]');
+        const removedIds = new Set(
+          localProjs.filter(p => p.role !== 'owner' && !serverIds.has(p.id)).map(p => p.id)
+        );
+
+        if (removedIds.size > 0) {
+          setProjects(prev => prev.filter(p => !removedIds.has(p.id)));
+          setTasks(prev => prev.filter(t => !t.projectId || !removedIds.has(t.projectId)));
+          setSelectedProjectId(curr => (curr && removedIds.has(curr) ? null : curr));
+        }
+      }
+
       setSyncState('SYNCED');
     } catch {}
   };

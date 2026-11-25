@@ -101,6 +101,7 @@ func (s *Server) routes() {
 		auth.GET("/sync/pull", s.handleSyncPull)
 		auth.GET("/events", s.handleSSEEvents)
 
+		auth.GET("/projects", s.handleListProjects)
 		auth.POST("/projects", s.handleCreateProject)
 		auth.POST("/projects/:id/invitations", s.handleCreateInvitation)
 		auth.POST("/projects/:id/members/remove", s.handleRemoveMember)
@@ -372,6 +373,16 @@ func (s *Server) broadcastSSE(sessionID, message string) {
 	}
 }
 
+// GET /projects
+func (s *Server) handleListProjects(c *gin.Context) {
+	u := getUserContext(c)
+	projects := s.storage.ListUserProjects(c.Request.Context(), u.UID)
+	if projects == nil {
+		projects = []storage.UserProject{}
+	}
+	c.JSON(http.StatusOK, gin.H{"projects": projects})
+}
+
 // POST /projects
 func (s *Server) handleCreateProject(c *gin.Context) {
 	u := getUserContext(c)
@@ -384,6 +395,7 @@ func (s *Server) handleCreateProject(c *gin.Context) {
 		return
 	}
 	_ = s.storage.SetMembership(c.Request.Context(), req.ID, u.UID, "owner")
+	s.storage.SetProjectName(c.Request.Context(), req.ID, req.Name)
 	c.JSON(http.StatusOK, gin.H{"id": req.ID, "name": req.Name, "role": "owner"})
 }
 

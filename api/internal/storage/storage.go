@@ -4,8 +4,11 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -42,11 +45,21 @@ type Storage interface {
 	RemoveMembership(ctx context.Context, projectID, uid string) error
 	SetUserEmail(ctx context.Context, uid, email string)
 	RemoveMemberByEmail(ctx context.Context, projectID, email string) error
+	SetProjectName(ctx context.Context, projectID, name string)
+	ListUserProjects(ctx context.Context, uid string) []UserProject
 }
 
-// MemoryStorage implements Storage in-memory with thread safety.
+// UserProject summarizes a user's active project membership.
+type UserProject struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+	Role string `json:"role"`
+}
+
+// MemoryStorage implements Storage in-memory with optional JSON disk persistence.
 type MemoryStorage struct {
 	mu           sync.RWMutex
+	stateFile    string
 	sessions     map[string]*models.Session // sessionID -> session
 	tokenToID    map[string]string          // tokenHash -> sessionID
 	tasks        map[string]map[string]interface{}
@@ -54,13 +67,29 @@ type MemoryStorage struct {
 	taskOwners   map[string]string
 	taskProjects map[string]string
 	memberships  map[string]string          // "projectID:uid" -> role
+	projectNames map[string]string          // projectID -> name
 	userEmails   map[string]string          // uid -> normalized email
 	invitations  map[string]*models.Invitation // tokenHash -> invitation
 	userFeeds    map[string][]models.FeedChange // uid -> changes
 	feedSequence int64
 }
 
-// NewMemoryStorage creates a thread-safe memory storage.
+type persistedState struct {
+	Sessions     map[string]*models.Session        `json:"sessions"`
+	TokenToID    map[string]string                 `json:"tokenToID"`
+	Tasks        map[string]map[string]interface{} `json:"tasks"`
+	TaskVersions map[string]int64                  `json:"taskVersions"`
+	TaskOwners   map[string]string                 `json:"taskOwners"`
+	TaskProjects map[string]string                 `json:"taskProjects"`
+	Memberships  map[string]string                 `json:"memberships"`
+	ProjectNames map[string]string                 `json:"projectNames"`
+	UserEmails   map[string]string                 `json:"userEmails"`
+	Invitations  map[string]*models.Invitation     `json:"invitations"`
+	UserFeeds    map[string][]models.FeedChange    `json:"userFeeds"`
+	FeedSequence int64                             `json:"feedSequence"`
+}
+
+// NewMemoryStorage creates a thread-safe in-memory storage (used in unit tests).
 func NewMemoryStorage() *MemoryStorage {
 	return &MemoryStorage{
 		sessions:     make(map[string]*models.Session),
@@ -70,9 +99,80 @@ func NewMemoryStorage() *MemoryStorage {
 		taskOwners:   make(map[string]string),
 		taskProjects: make(map[string]string),
 		memberships:  make(map[string]string),
+		projectNames: make(map[string]string),
 		userEmails:   make(map[string]string),
 		invitations:  make(map[string]*models.Invitation),
 		userFeeds:    make(map[string][]models.FeedChange),
+	}
+}
+
+// NewPersistentMemoryStorage creates a MemoryStorage backed by a JSON file on disk.
+func NewPersistentMemoryStorage(stateFile string) *MemoryStorage {
+	m := NewMemoryStorage()
+	m.stateFile = stateFile
+	if data, err := os.ReadFile(stateFile); err == nil {
+		var s persistedState
+		if json.Unmarshal(data, &s) == nil {
+			if s.Sessions != nil {
+				m.sessions = s.Sessions
+			}
+			if s.TokenToID != nil {
+				m.tokenToID = s.TokenToID
+			}
+			if s.Tasks != nil {
+				m.tasks = s.Tasks
+			}
+			if s.TaskVersions != nil {
+				m.taskVersions = s.TaskVersions
+			}
+			if s.TaskOwners != nil {
+				m.taskOwners = s.TaskOwners
+			}
+			if s.TaskProjects != nil {
+				m.taskProjects = s.TaskProjects
+			}
+			if s.Memberships != nil {
+				m.memberships = s.Memberships
+			}
+			if s.ProjectNames != nil {
+				m.projectNames = s.ProjectNames
+			}
+			if s.UserEmails != nil {
+				m.userEmails = s.UserEmails
+			}
+			if s.Invitations != nil {
+				m.invitations = s.Invitations
+			}
+			if s.UserFeeds != nil {
+				m.userFeeds = s.UserFeeds
+			}
+			m.feedSequence = s.FeedSequence
+		}
+	}
+	return m
+}
+
+func (m *MemoryStorage) saveLocked() {
+	if m.stateFile == "" {
+		return
+	}
+	_ = os.MkdirAll(filepath.Dir(m.stateFile), 0700)
+	s := persistedState{
+		Sessions:     m.sessions,
+		TokenToID:    m.tokenToID,
+		Tasks:        m.tasks,
+		TaskVersions: m.taskVersions,
+		TaskOwners:   m.taskOwners,
+		TaskProjects: m.taskProjects,
+		Memberships:  m.memberships,
+		ProjectNames: m.projectNames,
+		UserEmails:   m.userEmails,
+		Invitations:  m.invitations,
+		UserFeeds:    m.userFeeds,
+		FeedSequence: m.feedSequence,
+	}
+	if b, err := json.Marshal(s); err == nil {
+		_ = os.WriteFile(m.stateFile, b, 0600)
 	}
 }
 
@@ -175,6 +275,7 @@ func (m *MemoryStorage) SetMembership(ctx context.Context, projectID, uid, role 
 
 	key := fmt.Sprintf("%s:%s", projectID, uid)
 	m.memberships[key] = role
+	m.saveLocked()
 	return nil
 }
 
@@ -184,7 +285,37 @@ func (m *MemoryStorage) RemoveMembership(ctx context.Context, projectID, uid str
 
 	key := fmt.Sprintf("%s:%s", projectID, uid)
 	delete(m.memberships, key)
+	m.saveLocked()
 	return nil
+}
+
+func (m *MemoryStorage) SetProjectName(ctx context.Context, projectID, name string) {
+	if projectID == "" || name == "" {
+		return
+	}
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.projectNames[projectID] = name
+	m.saveLocked()
+}
+
+func (m *MemoryStorage) ListUserProjects(ctx context.Context, uid string) []UserProject {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	var out []UserProject
+	suffix := ":" + uid
+	for key, role := range m.memberships {
+		if strings.HasSuffix(key, suffix) && role != "" {
+			projectID := strings.TrimSuffix(key, suffix)
+			name := m.projectNames[projectID]
+			if name == "" {
+				name = projectID
+			}
+			out = append(out, UserProject{ID: projectID, Name: name, Role: role})
+		}
+	}
+	return out
 }
 
 func (m *MemoryStorage) SetUserEmail(ctx context.Context, uid, email string) {
@@ -211,6 +342,7 @@ func (m *MemoryStorage) RemoveMemberByEmail(ctx context.Context, projectID, emai
 			inv.Status = "CANCELLED"
 		}
 	}
+	m.saveLocked()
 	return nil
 }
 
@@ -295,6 +427,7 @@ func (m *MemoryStorage) ApplyTaskMutation(ctx context.Context, mut models.PushMu
 		}
 	}
 
+	m.saveLocked()
 	return &models.PushMutationResult{
 		MutationID: mut.MutationID,
 		Status:     "accepted",
@@ -328,6 +461,10 @@ func (m *MemoryStorage) CreateInvitation(ctx context.Context, inv *models.Invita
 	defer m.mu.Unlock()
 
 	m.invitations[inv.TokenHash] = inv
+	if inv.ProjectName != "" {
+		m.projectNames[inv.ProjectID] = inv.ProjectName
+	}
+	m.saveLocked()
 	return nil
 }
 
@@ -367,6 +504,10 @@ func (m *MemoryStorage) AcceptInvitation(ctx context.Context, tokenHash, uid, ve
 
 	inv.Status = "ACCEPTED"
 	m.memberships[fmt.Sprintf("%s:%s", inv.ProjectID, uid)] = inv.Role
+	m.userEmails[uid] = strings.ToLower(strings.TrimSpace(verifiedEmail))
+	if inv.ProjectName != "" {
+		m.projectNames[inv.ProjectID] = inv.ProjectName
+	}
 
 	// Seed existing project tasks into the newly joined member's feed
 	for taskID, pID := range m.taskProjects {
@@ -385,5 +526,6 @@ func (m *MemoryStorage) AcceptInvitation(ctx context.Context, tokenHash, uid, ve
 		}
 	}
 
+	m.saveLocked()
 	return inv, nil
 }
