@@ -81,9 +81,11 @@ export const App: React.FC = () => {
       });
       if (res.ok) {
         const data = await res.json();
-        if (data.token) {
-          localStorage.setItem(`cloudtodo_device_token_${user.uid}`, data.token);
-          return data.token;
+        const tok = data.deviceToken || data.token;
+        if (tok) {
+          localStorage.setItem(`cloudtodo_device_token_${user.uid}`, tok);
+          setDeviceToken(tok);
+          return tok;
         }
       }
     } catch {}
@@ -448,6 +450,13 @@ export const App: React.FC = () => {
     if (!token) {
       throw new Error('Could not reach sync API on localhost:8080');
     }
+    // Ensure project exists in current API memory before creating invitation
+    await fetch(`${API_BASE}/projects`, {
+      method: 'POST',
+      headers: buildHeaders(token, currentUser),
+      body: JSON.stringify({ id: currentProject.id, name: currentProject.name }),
+    }).catch(() => {});
+
     const res = await fetch(`${API_BASE}/projects/${currentProject.id}/invitations`, {
       method: 'POST',
       headers: buildHeaders(token, currentUser),
