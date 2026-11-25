@@ -10,7 +10,9 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"os/signal"
 	"path/filepath"
+	"syscall"
 	"time"
 
 	"github.com/Siraj-T/cloud-todo/desktop/internal/notify"
@@ -67,7 +69,9 @@ func startAPIServerIfOffline() *exec.Cmd {
 
 // launchDesktopWindow opens a dedicated native desktop window (Application Mode)
 // with no browser address bar, no tabs, and an isolated desktop profile.
-func launchDesktopWindow(targetURL string, appDir string) {
+// Returns true if the window process stayed attached until the user closed it,
+// or false if Edge delegated the window to an already-running Edge process.
+func launchDesktopWindow(targetURL string, appDir string) bool {
 	edgePath := `C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe`
 	chromePath := `C:\Program Files\Google\Chrome\Application\chrome.exe`
 
@@ -80,6 +84,7 @@ func launchDesktopWindow(targetURL string, appDir string) {
 			"--app="+targetURL,
 			"--window-size=1280,840",
 			"--user-data-dir="+dataDir,
+			"--disable-background-mode",
 			"--no-first-run",
 			"--no-default-browser-check",
 		)
@@ -88,6 +93,7 @@ func launchDesktopWindow(targetURL string, appDir string) {
 			"--app="+targetURL,
 			"--window-size=1280,840",
 			"--user-data-dir="+dataDir,
+			"--disable-background-mode",
 			"--no-first-run",
 			"--no-default-browser-check",
 		)
@@ -95,9 +101,11 @@ func launchDesktopWindow(targetURL string, appDir string) {
 		cmd = exec.Command("rundll32", "url.dll,FileProtocolHandler", targetURL)
 	}
 
+	startedAt := time.Now()
 	if err := cmd.Run(); err != nil {
 		log.Printf("Desktop window exited: %v", err)
 	}
+	return time.Since(startedAt) >= 3*time.Second
 }
 
 func main() {
@@ -194,7 +202,14 @@ func main() {
 	}
 
 	// Launch native desktop window (Application Mode)
-	launchDesktopWindow(localURL, appDir)
+	stayedAttached := launchDesktopWindow(localURL, appDir)
+	if !stayedAttached {
+		// Edge delegated the window to an existing Edge background process and returned early.
+		// Keep the local server and API alive until interrupted so the window does not get ERR_CONNECTION_REFUSED.
+		quit := make(chan os.Signal, 1)
+		signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+		<-quit
+	}
 
 	// Graceful shutdown when desktop window closes
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
