@@ -58,6 +58,8 @@ export const ShareModal: React.FC<ShareModalProps> = ({
       setMembers(updated);
       localStorage.setItem(`cloudtodo_members_${project.id}`, JSON.stringify(updated));
       setEmail('');
+    } catch (err: any) {
+      alert(err?.message || 'Failed to send invitation');
     } finally {
       setIsSending(false);
     }

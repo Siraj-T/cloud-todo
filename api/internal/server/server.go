@@ -49,6 +49,16 @@ func NewServerWithEmailer(store storage.Storage, emailer email.Sender) *Server {
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
 	router.Use(gin.Recovery())
+	router.Use(func(c *gin.Context) {
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, X-Device-Token, X-User-Email, X-Email-Verified")
+		if c.Request.Method == http.MethodOptions {
+			c.AbortWithStatus(http.StatusNoContent)
+			return
+		}
+		c.Next()
+	})
 
 	s := &Server{
 		storage:    store,
@@ -91,6 +101,7 @@ func (s *Server) routes() {
 		auth.GET("/sync/pull", s.handleSyncPull)
 		auth.GET("/events", s.handleSSEEvents)
 
+		auth.POST("/projects", s.handleCreateProject)
 		auth.POST("/projects/:id/invitations", s.handleCreateInvitation)
 		auth.POST("/invitations/:token/accept", s.handleAcceptInvitation)
 	}
@@ -356,6 +367,21 @@ func (s *Server) broadcastSSE(sessionID, message string) {
 	}
 }
 
+// POST /projects
+func (s *Server) handleCreateProject(c *gin.Context) {
+	u := getUserContext(c)
+	var req struct {
+		ID   string `json:"id"`
+		Name string `json:"name"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil || req.ID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid project payload"})
+		return
+	}
+	_ = s.storage.SetMembership(c.Request.Context(), req.ID, u.UID, "owner")
+	c.JSON(http.StatusOK, gin.H{"id": req.ID, "name": req.Name, "role": "owner"})
+}
+
 // POST /projects/:id/invitations
 func (s *Server) handleCreateInvitation(c *gin.Context) {
 	u := getUserContext(c)
@@ -440,8 +466,9 @@ func (s *Server) handleAcceptInvitation(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"status":    "accepted",
-		"projectId": inv.ProjectID,
-		"role":      inv.Role,
+		"status":      "accepted",
+		"projectId":   inv.ProjectID,
+		"projectName": inv.ProjectName,
+		"role":        inv.Role,
 	})
 }

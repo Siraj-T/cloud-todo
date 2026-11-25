@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckSquare, Folder, Plus, Calendar, CheckCircle2, Tag, LogOut } from 'lucide-react';
+import { CheckSquare, Folder, Plus, Calendar, CheckCircle2, Tag, LogOut, Link2 } from 'lucide-react';
 import { Project } from '../types';
 import { User } from '../lib/firebase';
 
@@ -29,6 +29,7 @@ interface SidebarProps {
   onSelectProject: (projectId: string | null) => void;
   projects: Project[];
   onNewProject: () => void;
+  onJoinProject?: () => void;
   globalCount: number;
   completedCount: number;
   dueTodayCount: number;
@@ -47,6 +48,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onSelectProject,
   projects,
   onNewProject,
+  onJoinProject,
   globalCount,
   completedCount,
   dueTodayCount,
@@ -161,13 +163,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="space-y-2">
           <div className="flex items-center justify-between px-3 text-xs font-mono font-semibold text-sepia uppercase tracking-widest">
             <span>Collaborative Projects</span>
-            <button
-              onClick={onNewProject}
-              title="Add new project"
-              className="p-1 rounded-lg hover:bg-paper-2 dark:hover:bg-ink-2 text-sepia hover:text-ember transition-colors border border-transparent hover:border-line"
-            >
-              <Plus className="w-4 h-4" />
-            </button>
+            <div className="flex items-center gap-1">
+              {onJoinProject && (
+                <button
+                  onClick={onJoinProject}
+                  title="Join project via invite link"
+                  className="p-1 rounded-lg hover:bg-paper-2 dark:hover:bg-ink-2 text-sepia hover:text-ember transition-colors border border-transparent hover:border-line"
+                >
+                  <Link2 className="w-3.5 h-3.5" />
+                </button>
+              )}
+              <button
+                onClick={onNewProject}
+                title="Add new project"
+                className="p-1 rounded-lg hover:bg-paper-2 dark:hover:bg-ink-2 text-sepia hover:text-ember transition-colors border border-transparent hover:border-line"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
+            </div>
           </div>
 
           <div className="space-y-1">

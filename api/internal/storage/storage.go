@@ -337,5 +337,22 @@ func (m *MemoryStorage) AcceptInvitation(ctx context.Context, tokenHash, uid, ve
 	inv.Status = "ACCEPTED"
 	m.memberships[fmt.Sprintf("%s:%s", inv.ProjectID, uid)] = inv.Role
 
+	// Seed existing project tasks into the newly joined member's feed
+	for taskID, pID := range m.taskProjects {
+		if pID == inv.ProjectID {
+			if taskPayload, ok := m.tasks[taskID]; ok {
+				m.feedSequence++
+				m.userFeeds[uid] = append(m.userFeeds[uid], models.FeedChange{
+					Sequence:  m.feedSequence,
+					EntityID:  taskID,
+					Version:   m.taskVersions[taskID],
+					Operation: "CREATE",
+					Entity:    taskPayload,
+					Timestamp: time.Now().UTC(),
+				})
+			}
+		}
+	}
+
 	return inv, nil
 }

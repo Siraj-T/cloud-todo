@@ -45,28 +45,154 @@ export const App: React.FC = () => {
   const [isDevicesOpen, setIsDevicesOpen] = useState(false);
   const [conflictModalData, setConflictModalData] = useState<{ local: Task; cloud: Task } | null>(null);
 
-  // Firebase Auth State
+  // Firebase Auth & API Session State
+  const API_BASE = 'http://localhost:8080';
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState<boolean>(true);
+  const [deviceToken, setDeviceToken] = useState<string | null>(null);
+
+  const buildHeaders = (token: string, user: User) => ({
+    'Content-Type': 'application/json',
+    'X-Device-Token': token,
+    'X-User-Email': user.email || '',
+    'X-Email-Verified': 'true',
+  });
+
+  const enrollWithAPI = async (user: User): Promise<string | null> => {
+    const existing = localStorage.getItem(`cloudtodo_device_token_${user.uid}`);
+    // Verify existing token is still valid in current API memory; if not, re-enroll
+    if (existing) {
+      try {
+        const check = await fetch(`${API_BASE}/devices`, {
+          headers: buildHeaders(existing, user),
+        });
+        if (check.ok) return existing;
+      } catch {}
+    }
+    try {
+      const res = await fetch(`${API_BASE}/sessions/enroll`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          uid: user.uid,
+          deviceName: 'Cloud Todo Desktop',
+          platform: 'windows',
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.token) {
+          localStorage.setItem(`cloudtodo_device_token_${user.uid}`, data.token);
+          return data.token;
+        }
+      }
+    } catch {}
+    return existing;
+  };
+
+  const pullSync = async (tokenOverride?: string, userOverride?: User) => {
+    const token = tokenOverride || deviceToken;
+    const user = userOverride || currentUser;
+    if (!token || !user) return;
+
+    try {
+      const cursor = localStorage.getItem(`cloudtodo_cursor_${user.uid}`) || '0';
+      const res = await fetch(`${API_BASE}/sync/pull?cursor=${encodeURIComponent(cursor)}`, {
+        headers: buildHeaders(token, user),
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (Array.isArray(data.changes) && data.changes.length > 0) {
+        setTasks(prev => {
+          const map = new Map(prev.map(t => [t.id, t]));
+          for (const ch of data.changes) {
+            if (ch.operation === 'DELETE') {
+              map.delete(ch.entityId);
+            } else if (ch.entity) {
+              const incoming = ch.entity as Task;
+              map.set(ch.entityId, { ...incoming, version: ch.version || incoming.version || 1 });
+            }
+          }
+          return Array.from(map.values());
+        });
+      }
+      if (data.nextCursor) {
+        localStorage.setItem(`cloudtodo_cursor_${user.uid}`, String(data.nextCursor));
+      }
+      setSyncState('SYNCED');
+    } catch {}
+  };
+
+  const pushTaskMutation = async (operation: 'CREATE' | 'UPDATE' | 'DELETE', task: Task, baseVersion: number) => {
+    if (!deviceToken || !currentUser) return;
+    try {
+      const res = await fetch(`${API_BASE}/sync/push`, {
+        method: 'POST',
+        headers: buildHeaders(deviceToken, currentUser),
+        body: JSON.stringify({
+          mutations: [
+            {
+              mutationId: `m-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+              entityId: task.id,
+              baseVersion,
+              operation,
+              payload: task,
+            },
+          ],
+        }),
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      const first = data.results?.[0];
+      if (first?.status === 'accepted') {
+        if (operation !== 'DELETE' && first.version) {
+          setTasks(prev => prev.map(t => (t.id === task.id ? { ...t, version: first.version } : t)));
+        }
+        setSyncState('SYNCED');
+        setPendingCount(0);
+      } else if (first?.status === 'conflict' && first.serverEntity) {
+        setConflictModalData({ local: task, cloud: first.serverEntity as Task });
+        setSyncState('CONFLICT');
+      }
+    } catch {}
+  };
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
       if (user) {
         // Load strictly this account's partitioned tasks and projects (empty [] for fresh users)
+        let loadedProjects: Project[] = [];
         try {
           const savedTasks = localStorage.getItem(`cloudtodo_tasks_${user.uid}`);
           const savedProjects = localStorage.getItem(`cloudtodo_projects_${user.uid}`);
           setTasks(savedTasks ? JSON.parse(savedTasks) : []);
-          setProjects(savedProjects ? JSON.parse(savedProjects) : []);
+          loadedProjects = savedProjects ? JSON.parse(savedProjects) : [];
+          setProjects(loadedProjects);
         } catch {
           setTasks([]);
           setProjects([]);
+        }
+        const token = await enrollWithAPI(user);
+        setDeviceToken(token);
+        if (token) {
+          // Ensure locally owned projects are registered in current API session
+          for (const p of loadedProjects) {
+            if (p.role === 'owner') {
+              fetch(`${API_BASE}/projects`, {
+                method: 'POST',
+                headers: buildHeaders(token, user),
+                body: JSON.stringify({ id: p.id, name: p.name }),
+              }).catch(() => {});
+            }
+          }
+          await pullSync(token, user);
         }
       } else {
         // Signed out: clear all workspace data from memory
         setTasks([]);
         setProjects([]);
+        setDeviceToken(null);
       }
       setSelectedProjectId(null);
       setSelectedTaskId(null);
@@ -76,6 +202,15 @@ export const App: React.FC = () => {
     });
     return () => unsubscribe();
   }, []);
+
+  // Periodic background sync pull every 5 seconds while signed in
+  useEffect(() => {
+    if (!currentUser || !deviceToken) return;
+    const timer = setInterval(() => {
+      pullSync();
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [currentUser, deviceToken]);
 
   // Persist tasks per-account whenever they change
   useEffect(() => {
@@ -188,9 +323,11 @@ export const App: React.FC = () => {
     e.stopPropagation();
     if (isViewer) return;
 
-    setTasks(tasks.map(t => (t.id === task.id ? { ...t, completed: !t.completed, updatedAt: new Date().toISOString() } : t)));
+    const updated = { ...task, completed: !task.completed, updatedAt: new Date().toISOString() };
+    setTasks(tasks.map(t => (t.id === task.id ? updated : t)));
     setPendingCount(prev => prev + 1);
     setSyncState('PENDING');
+    pushTaskMutation('UPDATE', updated, task.version);
   };
 
   const handleAddTask = (title: string) => {
@@ -203,7 +340,7 @@ export const App: React.FC = () => {
       description: '',
       tags: selectedTag ? [selectedTag] : [],
       completed: false,
-      version: 1,
+      version: 0,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -211,13 +348,16 @@ export const App: React.FC = () => {
     setSelectedTaskId(newTask.id);
     setPendingCount(prev => prev + 1);
     setSyncState('PENDING');
+    pushTaskMutation('CREATE', newTask, 0);
   };
 
   const handleSaveTask = (updated: Task) => {
     if (isViewer) return;
-    setTasks(tasks.map(t => (t.id === updated.id ? { ...updated, updatedAt: new Date().toISOString() } : t)));
+    const next = { ...updated, updatedAt: new Date().toISOString() };
+    setTasks(tasks.map(t => (t.id === updated.id ? next : t)));
     setPendingCount(prev => prev + 1);
     setSyncState('PENDING');
+    pushTaskMutation('UPDATE', next, updated.version);
   };
 
   const handleDeleteTask = (task: Task) => {
@@ -236,6 +376,8 @@ export const App: React.FC = () => {
       }
       setPendingCount(prev => prev + 1);
       setSyncState('PENDING');
+      pushTaskMutation('DELETE', task, task.version);
+      directChildren.forEach(c => pushTaskMutation('DELETE', c, c.version));
     }
   };
 
@@ -250,23 +392,26 @@ export const App: React.FC = () => {
       description: '',
       tags: [],
       completed: false,
-      version: 1,
+      version: 0,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
     setTasks([...tasks, newSubtask]);
     setPendingCount(prev => prev + 1);
     setSyncState('PENDING');
+    pushTaskMutation('CREATE', newSubtask, 0);
   };
 
   const handleToggleSubtaskComplete = (subtask: Task) => {
     if (isViewer) return;
-    setTasks(tasks.map(t => (t.id === subtask.id ? { ...t, completed: !t.completed, updatedAt: new Date().toISOString() } : t)));
+    const updated = { ...subtask, completed: !subtask.completed, updatedAt: new Date().toISOString() };
+    setTasks(tasks.map(t => (t.id === subtask.id ? updated : t)));
     setPendingCount(prev => prev + 1);
     setSyncState('PENDING');
+    pushTaskMutation('UPDATE', updated, subtask.version);
   };
 
-  const handleNewProject = () => {
+  const handleNewProject = async () => {
     if (!currentUser) return;
     const name = prompt('Enter project title:');
     if (name && name.trim()) {
@@ -282,12 +427,85 @@ export const App: React.FC = () => {
       setProjects([...projects, newProj]);
       setSelectedProjectId(newProj.id);
       setSelectedTaskId(null);
+
+      if (deviceToken) {
+        try {
+          await fetch(`${API_BASE}/projects`, {
+            method: 'POST',
+            headers: buildHeaders(deviceToken, currentUser),
+            body: JSON.stringify({ id: newProj.id, name: newProj.name }),
+          });
+        } catch {}
+      }
     }
   };
 
-  const handleSendInvite = async (_email: string, _role: string) => {
-    const token = Math.random().toString(36).substring(2, 15);
-    return `cloudtodo://invite/${token}`;
+  const handleSendInvite = async (email: string, role: string) => {
+    if (!currentProject || !currentUser) {
+      throw new Error('No active project or user');
+    }
+    const token = deviceToken || (await enrollWithAPI(currentUser));
+    if (!token) {
+      throw new Error('Could not reach sync API on localhost:8080');
+    }
+    const res = await fetch(`${API_BASE}/projects/${currentProject.id}/invitations`, {
+      method: 'POST',
+      headers: buildHeaders(token, currentUser),
+      body: JSON.stringify({
+        email,
+        role,
+        projectName: currentProject.name,
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || 'Failed to send invitation');
+    }
+    return data.inviteLink as string;
+  };
+
+  const handleJoinProject = async () => {
+    if (!currentUser) return;
+    const raw = prompt('Paste invite link or token (e.g. cloudtodo://invite/...):');
+    if (!raw || !raw.trim()) return;
+    const inviteToken = raw.trim().replace(/^cloudtodo:\/\/invite\//i, '');
+
+    const token = deviceToken || (await enrollWithAPI(currentUser));
+    if (!token) {
+      alert('Sync API on localhost:8080 is offline.');
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/invitations/${encodeURIComponent(inviteToken)}/accept`, {
+        method: 'POST',
+        headers: buildHeaders(token, currentUser),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || 'Could not accept invitation');
+        return;
+      }
+
+      const joinedProj: Project = {
+        id: data.projectId,
+        ownerUid: currentUser.uid,
+        name: data.projectName || `Shared Project (${data.projectId})`,
+        version: 1,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        role: data.role || 'editor',
+      };
+      setProjects(prev => {
+        if (prev.some(p => p.id === joinedProj.id)) return prev;
+        return [...prev, joinedProj];
+      });
+      setSelectedProjectId(joinedProj.id);
+      setSelectedTaskId(null);
+      await pullSync(token, currentUser);
+    } catch (err: any) {
+      alert('Failed to join project: ' + (err?.message || 'Network error'));
+    }
   };
 
   const handleRevokeDevice = async (sessionId: string) => {
@@ -448,6 +666,7 @@ export const App: React.FC = () => {
           }}
           projects={projects}
           onNewProject={handleNewProject}
+          onJoinProject={handleJoinProject}
           globalCount={globalCount}
           completedCount={completedCount}
           dueTodayCount={dueTodayCount}
