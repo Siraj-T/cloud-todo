@@ -240,8 +240,8 @@ func (m *MemoryStorage) ApplyTaskMutation(ctx context.Context, mut models.PushMu
 
 	currentVersion := m.taskVersions[entityID]
 
-	// Version check for conflict detection
-	if currentVersion != mut.BaseVersion {
+	// Version check for conflict detection (allow CREATE re-seed when server has no record yet)
+	if currentVersion != mut.BaseVersion && !(mut.Operation == "CREATE" && currentVersion == 0) {
 		serverEntity := m.tasks[entityID]
 		return &models.PushMutationResult{
 			MutationID:   mut.MutationID,

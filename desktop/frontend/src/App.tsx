@@ -92,13 +92,13 @@ export const App: React.FC = () => {
     return existing;
   };
 
-  const pullSync = async (tokenOverride?: string, userOverride?: User) => {
+  const pullSync = async (tokenOverride?: string, userOverride?: User, cursorOverride?: string) => {
     const token = tokenOverride || deviceToken;
     const user = userOverride || currentUser;
     if (!token || !user) return;
 
     try {
-      const cursor = localStorage.getItem(`cloudtodo_cursor_${user.uid}`) || '0';
+      const cursor = cursorOverride ?? (localStorage.getItem(`cloudtodo_cursor_${user.uid}`) || '0');
       const res = await fetch(`${API_BASE}/sync/pull?cursor=${encodeURIComponent(cursor)}`, {
         headers: buildHeaders(token, user),
       });
@@ -159,17 +159,39 @@ export const App: React.FC = () => {
     } catch {}
   };
 
+  const syncProjectTasksToServer = async (projectId: string, token: string, user: User, taskList: Task[]) => {
+    const projectTasks = taskList.filter(t => t.projectId === projectId);
+    if (projectTasks.length === 0) return;
+    try {
+      await fetch(`${API_BASE}/sync/push`, {
+        method: 'POST',
+        headers: buildHeaders(token, user),
+        body: JSON.stringify({
+          mutations: projectTasks.map(t => ({
+            mutationId: `seed-${t.id}-${Date.now()}`,
+            entityId: t.id,
+            baseVersion: 0,
+            operation: 'CREATE',
+            payload: t,
+          })),
+        }),
+      });
+    } catch {}
+  };
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
       if (user) {
         // Load strictly this account's partitioned tasks and projects (empty [] for fresh users)
+        let loadedTasks: Task[] = [];
         let loadedProjects: Project[] = [];
         try {
           const savedTasks = localStorage.getItem(`cloudtodo_tasks_${user.uid}`);
           const savedProjects = localStorage.getItem(`cloudtodo_projects_${user.uid}`);
-          setTasks(savedTasks ? JSON.parse(savedTasks) : []);
+          loadedTasks = savedTasks ? JSON.parse(savedTasks) : [];
           loadedProjects = savedProjects ? JSON.parse(savedProjects) : [];
+          setTasks(loadedTasks);
           setProjects(loadedProjects);
         } catch {
           setTasks([]);
@@ -178,14 +200,15 @@ export const App: React.FC = () => {
         const token = await enrollWithAPI(user);
         setDeviceToken(token);
         if (token) {
-          // Ensure locally owned projects are registered in current API session
+          // Ensure locally owned projects and their tasks are registered in current API session
           for (const p of loadedProjects) {
             if (p.role === 'owner') {
-              fetch(`${API_BASE}/projects`, {
+              await fetch(`${API_BASE}/projects`, {
                 method: 'POST',
                 headers: buildHeaders(token, user),
                 body: JSON.stringify({ id: p.id, name: p.name }),
               }).catch(() => {});
+              await syncProjectTasksToServer(p.id, token, user, loadedTasks);
             }
           }
           await pullSync(token, user);
@@ -450,12 +473,13 @@ export const App: React.FC = () => {
     if (!token) {
       throw new Error('Could not reach sync API on localhost:8080');
     }
-    // Ensure project exists in current API memory before creating invitation
+    // Ensure project and its local tasks exist in current API memory before creating invitation
     await fetch(`${API_BASE}/projects`, {
       method: 'POST',
       headers: buildHeaders(token, currentUser),
       body: JSON.stringify({ id: currentProject.id, name: currentProject.name }),
     }).catch(() => {});
+    await syncProjectTasksToServer(currentProject.id, token, currentUser, tasks);
 
     const res = await fetch(`${API_BASE}/projects/${currentProject.id}/invitations`, {
       method: 'POST',
@@ -511,7 +535,7 @@ export const App: React.FC = () => {
       });
       setSelectedProjectId(joinedProj.id);
       setSelectedTaskId(null);
-      await pullSync(token, currentUser);
+      await pullSync(token, currentUser, '0');
     } catch (err: any) {
       alert('Failed to join project: ' + (err?.message || 'Network error'));
     }
