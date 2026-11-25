@@ -31,88 +31,11 @@ const GoogleIcon = () => (
   </svg>
 );
 
-const initialTasks: Task[] = [
-  {
-    id: 't-1',
-    ownerUid: 'user-1',
-    projectId: 'p-1',
-    title: 'Atomic local SQLite persistence and mutation outbox',
-    description: 'Ensure transactions commit task changes and sync mutation records atomically without partial writes.',
-    dueDate: '2026-11-10',
-    tags: ['go', 'sqlite', 'persistence'],
-    completed: false,
-    version: 1,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: 't-2',
-    ownerUid: 'user-1',
-    projectId: 'p-1',
-    parentId: 't-1',
-    title: '5,000-task write latency benchmark verification',
-    description: 'Verify 95th percentile local write latency remains under 100 milliseconds.',
-    dueDate: null,
-    tags: ['benchmark', 'sqlite'],
-    completed: true,
-    version: 1,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: 't-3',
-    ownerUid: 'user-1',
-    projectId: 'p-1',
-    title: 'Incarn tactile parchment design & typography',
-    description: 'Harmonize warm paper tones, Newsreader serif, Roboto UI text, and hardware optical diode sync pulses.',
-    dueDate: '2026-11-06',
-    tags: ['design', 'incarn', 'typography'],
-    completed: false,
-    version: 1,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: 't-4',
-    ownerUid: 'user-1',
-    projectId: null,
-    title: 'Offline-first synchronization review',
-    description: 'Verify synchronization outbox retry mechanisms and conflict detection contracts.',
-    dueDate: '2026-11-06',
-    tags: ['architecture', 'roadmap'],
-    completed: false,
-    version: 1,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-];
-
-const initialProjects: Project[] = [
-  {
-    id: 'p-1',
-    ownerUid: 'user-1',
-    name: 'Cloud Todo Core',
-    version: 1,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    role: 'owner',
-  },
-  {
-    id: 'p-2',
-    ownerUid: 'user-1',
-    name: 'Editorial Systems',
-    version: 1,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    role: 'editor',
-  },
-];
-
 export const App: React.FC = () => {
-  const [tasks, setTasks] = useState<Task[]>(initialTasks);
-  const [projects, setProjects] = useState<Project[]>(initialProjects);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
-  const [selectedTaskId, setSelectedTaskId] = useState<string | null>('t-3');
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [selectedFilter, setSelectedFilter] = useState<'all' | 'dueToday' | 'completed'>('all');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
 
@@ -124,17 +47,49 @@ export const App: React.FC = () => {
 
   // Firebase Auth State
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [authLoading, setAuthLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
       if (user) {
-        setTasks(prev => prev.map(t => ({ ...t, ownerUid: user.uid })));
-        setProjects(prev => prev.map(p => ({ ...p, ownerUid: user.uid })));
+        // Load strictly this account's partitioned tasks and projects (empty [] for fresh users)
+        try {
+          const savedTasks = localStorage.getItem(`cloudtodo_tasks_${user.uid}`);
+          const savedProjects = localStorage.getItem(`cloudtodo_projects_${user.uid}`);
+          setTasks(savedTasks ? JSON.parse(savedTasks) : []);
+          setProjects(savedProjects ? JSON.parse(savedProjects) : []);
+        } catch {
+          setTasks([]);
+          setProjects([]);
+        }
+      } else {
+        // Signed out: clear all workspace data from memory
+        setTasks([]);
+        setProjects([]);
       }
+      setSelectedProjectId(null);
+      setSelectedTaskId(null);
+      setSelectedFilter('all');
+      setSelectedTag(null);
+      setAuthLoading(false);
     });
     return () => unsubscribe();
   }, []);
+
+  // Persist tasks per-account whenever they change
+  useEffect(() => {
+    if (currentUser) {
+      localStorage.setItem(`cloudtodo_tasks_${currentUser.uid}`, JSON.stringify(tasks));
+    }
+  }, [tasks, currentUser]);
+
+  // Persist projects per-account whenever they change
+  useEffect(() => {
+    if (currentUser) {
+      localStorage.setItem(`cloudtodo_projects_${currentUser.uid}`, JSON.stringify(projects));
+    }
+  }, [projects, currentUser]);
 
   const handleGoogleSignIn = async () => {
     try {
@@ -165,10 +120,9 @@ export const App: React.FC = () => {
     return saved ? saved === 'dark' : false;
   });
 
-  // Active devices
+  // Active devices (current session)
   const [devices, setDevices] = useState<DeviceSession[]>([
-    { sessionId: 's-1', deviceName: 'Primary Desktop', platform: 'windows', lastSeenAt: 'Just now', isCurrent: true },
-    { sessionId: 's-2', deviceName: 'Companion Tablet', platform: 'android', lastSeenAt: '1 hour ago', isCurrent: false },
+    { sessionId: 's-1', deviceName: 'This Windows Desktop', platform: 'windows', lastSeenAt: 'Just now', isCurrent: true },
   ]);
 
   useEffect(() => {
@@ -240,10 +194,10 @@ export const App: React.FC = () => {
   };
 
   const handleAddTask = (title: string) => {
-    if (isViewer) return;
+    if (isViewer || !currentUser) return;
     const newTask: Task = {
       id: `t-${Date.now()}`,
-      ownerUid: 'user-1',
+      ownerUid: currentUser.uid,
       projectId: selectedProjectId,
       title,
       description: '',
@@ -286,10 +240,10 @@ export const App: React.FC = () => {
   };
 
   const handleAddSubtask = (parentId: string, title: string) => {
-    if (isViewer) return;
+    if (isViewer || !currentUser) return;
     const newSubtask: Task = {
-      id: `st-${Date.now()}`,
-      ownerUid: 'user-1',
+      id: `st-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      ownerUid: currentUser.uid,
       projectId: selectedProjectId,
       parentId,
       title,
@@ -313,11 +267,12 @@ export const App: React.FC = () => {
   };
 
   const handleNewProject = () => {
+    if (!currentUser) return;
     const name = prompt('Enter project title:');
     if (name && name.trim()) {
       const newProj: Project = {
         id: `p-${Date.now()}`,
-        ownerUid: 'user-1',
+        ownerUid: currentUser.uid,
         name: name.trim(),
         version: 1,
         createdAt: new Date().toISOString(),
@@ -345,6 +300,50 @@ export const App: React.FC = () => {
     if (selectedFilter === 'completed') return 'Completed Archive';
     return 'The Master Agenda';
   };
+
+  if (authLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen w-screen bg-paper text-ink dark:bg-ink dark:text-paper font-sans">
+        <div className="w-10 h-10 rounded-xl bg-ember/15 border border-ember/30 flex items-center justify-center text-ember mb-4 animate-pulse">
+          <CheckSquare className="w-5 h-5" />
+        </div>
+        <p className="text-xs font-mono text-sepia">Checking authentication...</p>
+      </div>
+    );
+  }
+
+  if (!currentUser) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen w-screen bg-paper text-ink dark:bg-ink dark:text-paper font-sans p-6 select-none transition-colors">
+        <div className="w-full max-w-md p-8 sm:p-10 rounded-3xl bg-paper-2 dark:bg-ink-2 border border-line dark:border-line-ink shadow-2xl flex flex-col items-center text-center gap-6">
+          <div className="w-16 h-16 rounded-2xl bg-ember/15 border border-ember/30 flex items-center justify-center text-ember shadow-sm">
+            <CheckSquare className="w-8 h-8" />
+          </div>
+
+          <div className="space-y-2">
+            <h1 className="font-display text-3xl font-semibold tracking-tight text-ink dark:text-paper">
+              TodoApp
+            </h1>
+            <p className="text-sm text-sepia leading-relaxed">
+              Sign in with your Google account to access your private workspace, personal tasks, and shared projects.
+            </p>
+          </div>
+
+          <button
+            onClick={handleGoogleSignIn}
+            className="w-full flex items-center justify-center gap-3 px-6 py-3.5 rounded-2xl bg-paper dark:bg-ink-3 hover:bg-paper-3 dark:hover:bg-ink border border-line dark:border-line-ink text-sm font-semibold text-ink dark:text-paper shadow-card hover:border-ember/50 transition-all cursor-pointer"
+          >
+            <GoogleIcon />
+            <span>Continue with Google</span>
+          </button>
+
+          <p className="text-[11px] font-mono text-sepia/80">
+            Each Google account has its own isolated tasks &amp; projects.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-screen w-screen overflow-hidden bg-paper text-ink dark:bg-ink dark:text-paper antialiased font-sans transition-colors">

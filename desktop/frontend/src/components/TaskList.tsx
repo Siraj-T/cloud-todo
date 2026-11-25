@@ -188,6 +188,44 @@ export const TaskList: React.FC<TaskListProps> = ({
                     </p>
                   )}
 
+                  {/* Inline Subtasks Preview & Quick Checkboxes */}
+                  {subtasks.length > 0 && (
+                    <div className="mt-3 space-y-1.5 pl-1 border-l-2 border-line dark:border-line-ink">
+                      {subtasks.map(sub => (
+                        <div
+                          key={sub.id}
+                          onClick={e => {
+                            e.stopPropagation();
+                            onToggleComplete(sub, e);
+                          }}
+                          className="flex items-center gap-2 pl-2.5 py-0.5 text-xs group/sub"
+                        >
+                          <button
+                            type="button"
+                            disabled={isViewer}
+                            onClick={e => onToggleComplete(sub, e)}
+                            className={`w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 transition-all ${
+                              sub.completed
+                                ? 'bg-sage border-sage text-paper'
+                                : 'border-sepia/40 hover:border-ember bg-paper dark:bg-ink'
+                            } ${isViewer ? 'opacity-40 cursor-not-allowed' : ''}`}
+                          >
+                            {sub.completed && <Check className="w-2.5 h-2.5 stroke-[3]" />}
+                          </button>
+                          <span
+                            className={`truncate ${
+                              sub.completed
+                                ? 'line-through text-sepia/70'
+                                : 'text-ink-soft dark:text-paper-soft group-hover/sub:text-ink dark:group-hover/sub:text-paper'
+                            }`}
+                          >
+                            {sub.title}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
                   {/* Metadata Chips Bar */}
                   <div className="flex items-center gap-2.5 mt-3 text-xs text-sepia flex-wrap">
                     {task.dueDate && (

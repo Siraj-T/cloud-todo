@@ -114,6 +114,13 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({
     }
   };
 
+  const handleCreateSubtaskClick = () => {
+    if (newSubtaskTitle.trim()) {
+      onAddSubtask(task.id, newSubtaskTitle.trim());
+      setNewSubtaskTitle('');
+    }
+  };
+
   const isSubtask = Boolean(task.parentId);
   const completedSubtasksCount = subtasks.filter(s => s.completed).length;
   const progressPercent = subtasks.length > 0 ? Math.round((completedSubtasksCount / subtasks.length) * 100) : 0;
@@ -299,14 +306,28 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({
             </div>
 
             {!isViewer && (
-              <input
-                type="text"
-                placeholder="Record subtask... (Press Enter)"
-                value={newSubtaskTitle}
-                onChange={e => setNewSubtaskTitle(e.target.value)}
-                onKeyDown={handleCreateSubtask}
-                className="w-full bg-paper-2 dark:bg-ink-2 px-3 py-2 rounded-xl border border-line dark:border-line-ink text-xs text-ink dark:text-paper placeholder:text-sepia outline-none focus:border-ember font-sans"
-              />
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  placeholder="Add a subtask..."
+                  value={newSubtaskTitle}
+                  onChange={e => setNewSubtaskTitle(e.target.value)}
+                  onKeyDown={handleCreateSubtask}
+                  className="flex-1 bg-paper-2 dark:bg-ink-2 px-3 py-2 rounded-xl border border-line dark:border-line-ink text-xs text-ink dark:text-paper placeholder:text-sepia outline-none focus:border-ember font-sans"
+                />
+                <button
+                  type="button"
+                  onClick={handleCreateSubtaskClick}
+                  disabled={!newSubtaskTitle.trim()}
+                  className={`px-3 py-2 rounded-xl text-xs font-semibold transition-all shrink-0 ${
+                    newSubtaskTitle.trim()
+                      ? 'bg-ember hover:bg-ember-deep text-paper cursor-pointer shadow-sm'
+                      : 'bg-paper-3/60 dark:bg-ink-2 text-sepia/60 cursor-not-allowed border border-line dark:border-line-ink'
+                  }`}
+                >
+                  + Add
+                </button>
+              </div>
             )}
           </div>
         )}
