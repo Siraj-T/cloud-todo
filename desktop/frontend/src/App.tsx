@@ -513,6 +513,7 @@ export const App: React.FC = () => {
       <ShareModal
         isOpen={isShareOpen}
         project={currentProject}
+        ownerEmail={currentUser.email || currentUser.displayName || currentUser.uid}
         onClose={() => setIsShareOpen(false)}
         onSendInvite={handleSendInvite}
       />

@@ -11,6 +11,7 @@ interface Member {
 interface ShareModalProps {
   isOpen: boolean;
   project: Project | null;
+  ownerEmail: string;
   onClose: () => void;
   onSendInvite: (email: string, role: string) => Promise<string>;
 }
@@ -18,6 +19,7 @@ interface ShareModalProps {
 export const ShareModal: React.FC<ShareModalProps> = ({
   isOpen,
   project,
+  ownerEmail,
   onClose,
   onSendInvite,
 }) => {
@@ -27,9 +29,20 @@ export const ShareModal: React.FC<ShareModalProps> = ({
   const [copied, setCopied] = useState(false);
   const [isSending, setIsSending] = useState(false);
 
-  const [members, setMembers] = useState<Member[]>([
-    { uid: 'owner-1', email: 'you@example.com', role: 'owner' },
-  ]);
+  const [members, setMembers] = useState<Member[]>([]);
+
+  React.useEffect(() => {
+    if (project) {
+      try {
+        const saved = localStorage.getItem(`cloudtodo_members_${project.id}`);
+        if (saved) {
+          setMembers(JSON.parse(saved));
+          return;
+        }
+      } catch {}
+      setMembers([{ uid: project.ownerUid, email: ownerEmail, role: project.role || 'owner' }]);
+    }
+  }, [project, ownerEmail]);
 
   if (!isOpen || !project) return null;
 
@@ -41,7 +54,9 @@ export const ShareModal: React.FC<ShareModalProps> = ({
     try {
       const link = await onSendInvite(email.trim(), role);
       setInviteLink(link);
-      setMembers([...members, { uid: `user-${Date.now()}`, email: email.trim(), role }]);
+      const updated = [...members, { uid: `user-${Date.now()}`, email: email.trim(), role }];
+      setMembers(updated);
+      localStorage.setItem(`cloudtodo_members_${project.id}`, JSON.stringify(updated));
       setEmail('');
     } finally {
       setIsSending(false);
